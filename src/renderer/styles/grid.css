@@ -242,3 +242,37 @@
   margin-top: 6px;
   text-align: right;
 }
+
+/* ── 侧边栏拖拽手柄 ──────────────────────────────── */
+#sidebar-resizer {
+  position: relative;
+  width: 1px;
+  flex-shrink: 0;
+  background: rgba(128, 128, 128, 0.35);
+  -webkit-app-region: no-drag;
+  z-index: 100;
+  transition: width 0.15s ease, background-color 0.2s ease;
+}
+
+/* 隐形点击区：10px 透明区域，居中于 1px 实体线 */
+#sidebar-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+}
+
+/* 悬停时稍微加深 */
+#sidebar-resizer:hover {
+  background: rgba(128, 128, 128, 0.55);
+}
+
+/* 拖拽中：线条加粗 */
+#sidebar-resizer.dragging {
+  width: 2px;
+}
