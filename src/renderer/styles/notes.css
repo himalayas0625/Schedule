@@ -47,13 +47,15 @@
   padding: 4px 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .note-item {
   display: flex;
   align-items: flex-start;
   gap: 7px;
+  padding: 4px 0;
+  transition: all 0.2s ease;
 }
 
 .note-num {
@@ -68,7 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .note-item:nth-child(1) .note-num { background: rgba(232, 168, 56, 0.20); color: var(--today-accent); }
@@ -83,14 +85,13 @@
   color: var(--text-primary);
   font-family: inherit;
   font-size: 12px;
-  line-height: 1.6;
-  padding: 2px 4px;
+  line-height: 1.5;
+  padding: 4px 2px;
   outline: none;
-  transition: border-color var(--transition);
+  transition: border-color var(--transition), height 0.2s ease;
   min-width: 0;
   resize: none;
-  overflow: hidden;     /* 隐藏滚动条，高度由 scrollHeight 撑开 */
-  min-height: 22px;
+  overflow: hidden;
   display: block;
 }
 

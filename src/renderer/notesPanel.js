@@ -62,6 +62,12 @@ export const NotesPanel = {
       // 初始高度
       setTimeout(autoResize, 0)
 
+      // 监听侧边栏宽度变化，重新计算高度
+      const resizeObserver = new ResizeObserver(() => {
+        autoResize()
+      })
+      resizeObserver.observe(panel)
+
       // 防抖保存 + 自动调整高度
       let saveTimer = null
       input.addEventListener('input', () => {
