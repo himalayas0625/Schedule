@@ -1,0 +1,33 @@
+{
+  "name": "screen-schedule",
+  "version": "1.0.0",
+  "description": "Desktop floating week schedule overlay",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --inspect=5858",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.schedule.widget",
+    "productName": "Schedule",
+    "directories": { "output": "dist" },
+    "files": ["src/**/*", "assets/**/*"],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    }
+  }
+}

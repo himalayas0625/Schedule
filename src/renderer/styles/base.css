@@ -1,0 +1,95 @@
+/* ── CSS 变量 & 主题 ─────────────────────────────── */
+:root {
+  --accent: #4A90D9;
+  --accent-rgb: 74, 144, 217;
+  --today-accent: #E8A838;
+  --danger: #ff4d4f;
+  --radius: 10px;
+  --title-bar-height: 42px;
+  --notes-width: 190px;
+  --time-label-width: 52px;
+  --cell-height: 40px;
+  --transition: 0.15s ease;
+}
+
+/* 暗色主题（默认） */
+[data-theme="dark"], :root {
+  --bg-primary:    #16161e;
+  --bg-secondary:  #1e1e2a;
+  --bg-cell-hover: #2a2a3a;
+  --bg-event:      rgba(74, 144, 217, 0.20);
+  --text-primary:  #e8e8f0;
+  --text-muted:    #6b6b88;
+  --border:        #2e2e3e;
+  --shadow:        0 12px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* 亮色主题 —— High Contrast Professional */
+[data-theme="light"] {
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f1f3f4;
+  --bg-cell-hover: #e8eaed;
+  --bg-event:      #e8f0fe;
+  --text-primary:  #202124;
+  --text-muted:    #5f6368;
+  --border:        #dadce0;
+  --shadow:        0 12px 40px rgba(60, 64, 67, 0.15), 0 2px 8px rgba(60, 64, 67, 0.08);
+  /* 事件块专用色 */
+  --event-text:    #174ea6;
+  --event-border:  #1967d2;
+  /* 选中列背景 */
+  --bg-selected:   rgba(26, 115, 232, 0.08);
+}
+
+/* ── Reset ───────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100vh;
+  overflow: hidden;
+  font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 输入框恢复文字选择 */
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-family: inherit;
+}

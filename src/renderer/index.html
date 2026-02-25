@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>日程</title>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/grid.css">
+  <link rel="stylesheet" href="styles/notes.css">
+</head>
+<body>
+  <!-- 标题栏 -->
+  <div id="title-bar">
+    <span id="app-title">📅 日程</span>
+
+    <div id="week-nav">
+      <button id="btn-prev-week" title="上一周">&#8249;</button>
+      <button id="btn-week-label" title="回到本周">本周</button>
+      <button id="btn-next-week" title="下一周">&#8250;</button>
+    </div>
+
+    <div id="window-controls">
+      <button id="btn-minimize" title="最小化">&#8211;</button>
+      <button id="btn-maximize" title="最大化">&#9633;</button>
+      <button id="btn-close" title="关闭到托盘">&#215;</button>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div id="app-container">
+    <!-- 左侧笔记面板 -->
+    <aside id="notes-panel">
+      <div id="notes-loading">加载中...</div>
+    </aside>
+
+    <!-- 侧边栏拖拽手柄 -->
+    <div id="sidebar-resizer"></div>
+
+    <!-- 右侧日程网格 -->
+    <main id="schedule-grid">
+      <!-- 表头：星期列 -->
+      <div id="grid-header"></div>
+      <!-- 可滚动网格体 -->
+      <div id="grid-body"></div>
+    </main>
+  </div>
+
+  <!-- 浮动编辑框（全局唯一） -->
+  <div id="floating-editor" style="display:none">
+    <textarea id="floating-textarea" rows="3" placeholder="输入事件内容..."></textarea>
+  </div>
+
+  <!-- 右下角缩放手柄 -->
+  <div id="resize-handle" title="拖拽调整窗口大小"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
