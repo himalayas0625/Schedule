@@ -227,6 +227,8 @@
   line-height: 1.5;
   resize: none;
   outline: none;
+  padding-right: 28px; /* 为右上角垃圾桶按钮留出空间 */
+  box-sizing: border-box;
 }
 
 .editor-trash {

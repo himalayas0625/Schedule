@@ -1,5 +1,9 @@
 const DAY_NAMES_FULL = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-const TODAY_STR = new Date().toISOString().split('T')[0]
+
+// 动态获取今天的日期字符串，避免程序长时间运行后日期不更新
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0]
+}
 
 export const NotesPanel = {
   render(notesData, selectedDate, callbacks) {
@@ -7,7 +11,7 @@ export const NotesPanel = {
     panel.innerHTML = ''
 
     const date = new Date(selectedDate + 'T12:00:00')
-    const isToday = selectedDate === TODAY_STR
+    const isToday = selectedDate === getTodayStr()
     const dayName = DAY_NAMES_FULL[date.getDay()]
     const monthDay = `${date.getMonth() + 1}月${date.getDate()}日`
 

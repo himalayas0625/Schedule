@@ -10,7 +10,11 @@ const TIMES = (() => {
 
 const CELL_HEIGHT = 40 // px，必须与 CSS --cell-height 一致
 const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-const TODAY_STR = new Date().toISOString().split('T')[0]
+
+// 动态获取今天的日期字符串，避免程序长时间运行后日期不更新
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0]
+}
 
 let currentRedLineEl = null
 let redLineTimer = null
@@ -159,7 +163,7 @@ export const WeekGrid = {
 
     weekDates.forEach(dateStr => {
       const date = new Date(dateStr + 'T12:00:00')
-      const isToday = dateStr === TODAY_STR
+      const isToday = dateStr === getTodayStr()
       const isSelected = dateStr === selectedDate
 
       const col = document.createElement('div')

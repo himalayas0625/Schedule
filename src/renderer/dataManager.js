@@ -23,31 +23,31 @@ export class DataManager {
   }
 
   // ── 事件 ──────────────────────────────────────────
-  setEvent(weekKey, dateStr, timeSlot, text) {
+  async setEvent(weekKey, dateStr, timeSlot, text) {
     this._ensureWeek(weekKey)
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {}
     }
     this._data.weeks[weekKey].events[dateStr][timeSlot] = { text }
-    this._persist(`weeks.${weekKey}.events.${dateStr}`)
+    await this._persistWeek(weekKey)
   }
 
-  clearEvent(weekKey, dateStr, timeSlot) {
+  async clearEvent(weekKey, dateStr, timeSlot) {
     const day = this._data.weeks[weekKey]?.events?.[dateStr]
     if (day?.[timeSlot]) {
       delete day[timeSlot]
-      this._persist(`weeks.${weekKey}.events.${dateStr}`)
+      await this._persistWeek(weekKey)
     }
   }
 
   // ── 笔记 ──────────────────────────────────────────
-  setNote(weekKey, dateStr, index, value) {
+  async setNote(weekKey, dateStr, index, value) {
     this._ensureWeek(weekKey)
     if (!this._data.weeks[weekKey].notes[dateStr]) {
       this._data.weeks[weekKey].notes[dateStr] = ['', '', '']
     }
     this._data.weeks[weekKey].notes[dateStr][index] = value
-    this._persist(`weeks.${weekKey}.notes.${dateStr}`)
+    await this._persistWeek(weekKey)
   }
 
   getNotes(weekKey, dateStr) {
@@ -69,9 +69,9 @@ export class DataManager {
     if (!this._data.weeks[weekKey].events) this._data.weeks[weekKey].events = {}
   }
 
-  async _persist(key) {
-    // 按点号路径取出对应子数据
-    const value = key.split('.').reduce((obj, k) => obj?.[k], this._data)
-    await window.electronAPI.set(key, value)
+  async _persistWeek(weekKey) {
+    // 直接存储整个周的数据，确保数据完整性
+    const weekData = this._data.weeks[weekKey]
+    await window.electronAPI.set(`weeks.${weekKey}`, weekData)
   }
 }

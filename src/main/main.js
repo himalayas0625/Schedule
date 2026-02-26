@@ -28,8 +28,15 @@ function registerShortcut(win) {
       if (win.isVisible()) {
         win.hide()
       } else {
+        // 先设置透明度为0，避免闪烁
+        const savedOpacity = store.get('settings.opacity') ?? 0.95
+        win.setOpacity(0)
         win.show()
-        win.focus()
+        // 下一帧恢复透明度
+        setImmediate(() => {
+          win.setOpacity(savedOpacity)
+          win.focus()
+        })
       }
     })
   } catch (e) {
