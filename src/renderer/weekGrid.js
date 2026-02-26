@@ -47,12 +47,24 @@ const FloatingEditor = {
     // 底部提示
     const hint = document.createElement('div')
     hint.className = 'editor-hint'
-    hint.textContent = 'Enter 保存 · Esc 取消'
+    hint.textContent = 'Enter 保存 · Alt+Enter 换行 · Esc 取消'
     this._editor.appendChild(hint)
 
     this._textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { this.cancel(); e.preventDefault() }
-      if (e.key === 'Enter' && !e.shiftKey) { this.commit(); e.preventDefault() }
+      // Alt+Enter 换行（手动插入换行符）
+      if (e.key === 'Enter' && e.altKey) {
+        e.preventDefault()
+        const textarea = this._textarea
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+        const value = textarea.value
+        textarea.value = value.substring(0, start) + '\n' + value.substring(end)
+        textarea.selectionStart = textarea.selectionEnd = start + 1
+        return
+      }
+      // Enter 保存（不含修饰键）
+      if (e.key === 'Enter' && !e.shiftKey && !e.altKey) { this.commit(); e.preventDefault() }
     })
 
     // 右键菜单
