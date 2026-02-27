@@ -187,7 +187,7 @@
   position: absolute;
   left: var(--time-label-width);
   right: 0;
-  height: 2px;
+  height: 1px;
   background: var(--danger);
   pointer-events: none;
   z-index: 10;
@@ -197,10 +197,10 @@
 .current-time-line::before {
   content: '';
   position: absolute;
-  left: -5px;
-  top: -4px;
-  width: 10px;
-  height: 10px;
+  left: -2.5px;
+  top: -2px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--danger);
 }
