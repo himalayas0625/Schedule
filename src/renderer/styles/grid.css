@@ -173,6 +173,14 @@
   font-weight: 500;
 }
 
+/* 并列模式：cell 本身不显示 border-left，由各 block 自己展示 */
+[data-theme="light"] .grid-cell.multi-event {
+  border-left: none;
+  padding-left: 0;
+  box-shadow: none;
+  background: var(--bg-primary) !important;
+}
+
 /* 选中列：Google 蓝色浅背景 */
 [data-theme="light"] .grid-cell.selected-col {
   background: var(--bg-selected);         /* rgba(26,115,232,0.08) */
@@ -198,11 +206,12 @@
 
 /* 双事件：cell 变为透明 flex 容器，每个 block 独立带背景 */
 .grid-cell.multi-event {
-  background: transparent !important;
+  background: var(--bg-primary) !important;
   display: flex;
   flex-direction: row;
-  padding: 2px;
-  gap: 2px;
+  align-items: stretch;
+  padding: 0;
+  gap: 3px;
 }
 
 .grid-cell.multi-event .event-block {
