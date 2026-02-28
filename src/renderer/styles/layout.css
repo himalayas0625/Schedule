@@ -136,6 +136,49 @@
   min-width: 0;
 }
 
+/* ── 右侧"本周重点"面板 ──────────────────────────── */
+#right-panel {
+  width: var(--notes-width);
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg-secondary);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 右侧边栏拖拽手柄 ────────────────────────────── */
+#right-resizer {
+  position: relative;
+  width: 1px;
+  flex-shrink: 0;
+  background: rgba(128, 128, 128, 0.35);
+  -webkit-app-region: no-drag;
+  z-index: 100;
+  transition: width 0.15s ease, background-color 0.2s ease;
+}
+
+#right-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+}
+
+#right-resizer:hover {
+  background: rgba(128, 128, 128, 0.55);
+}
+
+#right-resizer.dragging {
+  width: 2px;
+}
+
 /* ── 缩放手柄 ─────────────────────────────────────── */
 #resize-handle {
   position: fixed;

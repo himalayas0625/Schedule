@@ -94,6 +94,20 @@ export class DataManager {
     await this._persistWeek(weekKey)
   }
 
+  // ── 本周重点（右侧面板，按周存储）────────────────────
+  getWeekNotes(weekKey) {
+    return this._data.weeks[weekKey]?.weekNotes ?? ['', '', '']
+  }
+
+  async setWeekNote(weekKey, index, value) {
+    this._ensureWeek(weekKey)
+    if (!this._data.weeks[weekKey].weekNotes) {
+      this._data.weeks[weekKey].weekNotes = ['', '', '']
+    }
+    this._data.weeks[weekKey].weekNotes[index] = value
+    await this._persistWeek(weekKey)
+  }
+
   // ── 笔记 ──────────────────────────────────────────
   async setNote(weekKey, dateStr, index, value) {
     this._ensureWeek(weekKey)

@@ -1,5 +1,5 @@
 import { WeekGrid } from './weekGrid.js'
-import { NotesPanel } from './notesPanel.js'
+import { NotesPanel, RightPanel } from './notesPanel.js'
 import { DataManager } from './dataManager.js'
 
 // ── 工具函数 ──────────────────────────────────────────────────────────────────
@@ -113,13 +113,20 @@ async function init() {
       }
     })
 
+    // 渲染右侧"本周重点"面板
+    RightPanel.render(dm.getWeekNotes(weekKey), formatWeekLabel(weekDates), {
+      onChange(idx, val) {
+        dm.setWeekNote(weekKey, idx, val)
+      }
+    })
+
     // 自动滚动到当前时间
     WeekGrid.scrollToCurrentTime()
   }
 
   render()
 
-  // ── 侧边栏宽度拖拽 ───────────────────────────────────
+  // ── 左侧边栏宽度拖拽 ─────────────────────────────────
   const notesPanel = document.getElementById('notes-panel')
   const resizer    = document.getElementById('sidebar-resizer')
   const MIN_WIDTH  = 180
@@ -137,6 +144,30 @@ async function init() {
 
     const onMouseUp = () => {
       resizer.classList.remove('dragging')
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  })
+
+  // ── 右侧边栏宽度拖拽 ─────────────────────────────────
+  const rightPanel   = document.getElementById('right-panel')
+  const rightResizer = document.getElementById('right-resizer')
+
+  rightResizer.addEventListener('mousedown', (e) => {
+    e.preventDefault()
+    rightResizer.classList.add('dragging')
+
+    const onMouseMove = (e) => {
+      const containerRight = rightPanel.parentElement.getBoundingClientRect().right
+      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, containerRight - e.clientX))
+      rightPanel.style.width = `${newWidth}px`
+    }
+
+    const onMouseUp = () => {
+      rightResizer.classList.remove('dragging')
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
     }
