@@ -41,6 +41,7 @@ function createWindow(store) {
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
+    icon: path.join(__dirname, '../../logo.png'),
     alwaysOnTop: store.get('settings.alwaysOnTop') ?? true,
     hasShadow: true,
     resizable: true,
