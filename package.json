@@ -7,10 +7,12 @@
     "start": "electron .",
     "dev": "electron . --inspect=5858",
     "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac"
+    "build:mac": "electron-builder --mac",
+    "dist": "electron-builder --win --publish never"
   },
   "dependencies": {
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.3"
   },
   "devDependencies": {
     "electron": "^29.0.0",
@@ -19,8 +21,12 @@
   "build": {
     "appId": "com.schedule.widget",
     "productName": "Schedule",
-    "directories": { "output": "dist" },
-    "files": ["src/**/*", "assets/**/*"],
+    "directories": {
+      "output": "dist"
+    },
+    "extraResources": [
+      { "from": "logo.png", "to": "logo.png" }
+    ],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
@@ -28,6 +34,11 @@
     "mac": {
       "target": "dmg",
       "icon": "assets/icon.icns"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "YOUR_GITHUB_USERNAME",
+      "repo": "YOUR_REPO_NAME"
     }
   }
 }

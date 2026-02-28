@@ -1,4 +1,4 @@
-const { BrowserWindow, screen, ipcMain, nativeTheme } = require('electron')
+const { BrowserWindow, screen, ipcMain, nativeTheme, app } = require('electron')
 const path = require('path')
 
 let mainWindow = null
@@ -41,7 +41,9 @@ function createWindow(store) {
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
-    icon: path.join(__dirname, '../../logo.png'),
+    icon: app.isPackaged
+      ? path.join(process.resourcesPath, 'logo.png')
+      : path.join(__dirname, '../../logo.png'),
     alwaysOnTop: store.get('settings.alwaysOnTop') ?? true,
     hasShadow: true,
     resizable: true,

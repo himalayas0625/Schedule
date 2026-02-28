@@ -4,8 +4,10 @@ const path = require('path')
 let tray = null
 
 function createTray(win, store) {
-  // 使用 logo.png 作为托盘图标
-  let iconPath = path.join(__dirname, '../../logo.png')
+  // 使用 logo.png 作为托盘图标（打包后在 extraResources，开发时在根目录）
+  let iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'logo.png')
+    : path.join(__dirname, '../../logo.png')
   let icon
   try {
     icon = nativeImage.createFromPath(iconPath)
