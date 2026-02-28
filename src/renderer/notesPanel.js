@@ -109,7 +109,7 @@ function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onCha
 // ── 左侧日记面板（按日） ───────────────────────────────────────────────────────
 export const NotesPanel = {
   render(notesData, selectedDate, callbacks) {
-    const panel = document.getElementById('notes-panel')
+    const panel = document.getElementById('right-panel')
     const date = new Date(selectedDate + 'T12:00:00')
     const isToday = selectedDate === getTodayStr()
     const dayName = DAY_NAMES_FULL[date.getDay()]
@@ -131,12 +131,12 @@ export const NotesPanel = {
 // ── 右侧周重点面板（按周） ─────────────────────────────────────────────────────
 export const RightPanel = {
   render(weekNotesData, weekLabel, callbacks) {
-    const panel = document.getElementById('right-panel')
+    const panel = document.getElementById('notes-panel')
 
     renderTo(panel, {
       items: weekNotesData,
-      title: '本周重点',
-      sub: weekLabel,
+      title: weekLabel,
+      sub: '本周重点',
       isHighlight: false,
       placeholders: ['第一件事', '第二件事', '第三件事'],
       onChange(index, val) {
