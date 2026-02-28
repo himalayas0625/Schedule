@@ -2,10 +2,11 @@
 :root {
   --accent: #4A90D9;
   --accent-rgb: 74, 144, 217;
-  --today-accent: #E8A838;
+  --today-accent: #FF9500;
+  --today-accent-rgb: 255, 149, 0;
   --danger: #ff4d4f;
   --radius: 10px;
-  --title-bar-height: 42px;
+  --title-bar-height: 72px;
   --notes-width: 190px;
   --time-label-width: 52px;
   --cell-height: 40px;
@@ -20,25 +21,43 @@
   --bg-event:      rgba(74, 144, 217, 0.20);
   --text-primary:  #e8e8f0;
   --text-muted:    #6b6b88;
+  --text-aux:      #3e3e52;
   --border:        #2e2e3e;
   --shadow:        0 12px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  /* 暗色任务分类 */
+  --event-bg-important:   rgba(192, 57, 43, 0.22);
+  --event-text-important: #F1948A;
+  --event-bg-personal:    rgba(125, 60, 152, 0.22);
+  --event-text-personal:  #CE93D8;
 }
 
-/* 亮色主题 —— High Contrast Professional */
+/* 亮色主题 —— Modern Layered */
 [data-theme="light"] {
-  --bg-primary:    #ffffff;
-  --bg-secondary:  #f1f3f4;
-  --bg-cell-hover: #e8eaed;
-  --bg-event:      #e8f0fe;
-  --text-primary:  #202124;
-  --text-muted:    #5f6368;
-  --border:        #dadce0;
-  --shadow:        0 12px 40px rgba(60, 64, 67, 0.15), 0 2px 8px rgba(60, 64, 67, 0.08);
-  /* 事件块专用色 */
-  --event-text:    #174ea6;
-  --event-border:  #1967d2;
+  /* 背景分层：网格区暖米灰 / 侧边栏纯白 */
+  --bg-primary:    #F7F5F2;
+  --bg-secondary:  #ffffff;
+  --bg-cell-hover: #EDE9E4;
+  --bg-event:      #D4E8F7;
+  /* 文字三层级 */
+  --text-primary:  #2C3E50;
+  --text-muted:    #5D6D7E;
+  --text-aux:      #BDC3C7;
+  /* 边框 & 阴影 */
+  --border:        #D5DCE8;
+  --shadow:        0 12px 40px rgba(44, 62, 80, 0.12), 0 2px 8px rgba(44, 62, 80, 0.07);
+  /* 品牌色：爱马仕橙 */
+  --today-accent:  #FF9500;
+  /* 普通日程（粉彩蓝） */
+  --event-text:    #3A6B8A;
+  --event-border:  #4A90D9;
+  /* 重要任务（粉彩珊瑚红） */
+  --event-bg-important:   #F8D7D2;
+  --event-text-important: #8C4040;
+  /* 个人生活（粉彩薰衣草紫） */
+  --event-bg-personal:    #E0D2F4;
+  --event-text-personal:  #604090;
   /* 选中列背景 */
-  --bg-selected:   rgba(26, 115, 232, 0.08);
+  --bg-selected:   rgba(26, 115, 232, 0.06);
 }
 
 /* ── Reset ───────────────────────────────────────── */

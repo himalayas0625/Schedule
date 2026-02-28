@@ -13,12 +13,14 @@
 <body>
   <!-- 标题栏 -->
   <div id="title-bar">
-    <span id="app-title">📅 日程</span>
 
-    <div id="week-nav">
-      <button id="btn-prev-week" title="上一周">&#8249;</button>
-      <button id="btn-week-label" title="回到本周">本周</button>
-      <button id="btn-next-week" title="下一周">&#8250;</button>
+    <div id="title-center">
+      <span id="app-title">日程</span>
+      <div id="week-nav">
+        <button id="btn-prev-week" title="上一周">&#8249;</button>
+        <button id="btn-week-label" title="回到本周">本周</button>
+        <button id="btn-next-week" title="下一周">&#8250;</button>
+      </div>
     </div>
 
     <div id="window-controls">
@@ -38,7 +40,7 @@
     <!-- 侧边栏拖拽手柄 -->
     <div id="sidebar-resizer"></div>
 
-    <!-- 右侧日程网格 -->
+    <!-- 日程网格 -->
     <main id="schedule-grid">
       <!-- 表头：星期列 -->
       <div id="grid-header"></div>
@@ -49,7 +51,7 @@
     <!-- 右侧边栏拖拽手柄 -->
     <div id="right-resizer"></div>
 
-    <!-- 右侧"本周重点"面板 -->
+    <!-- 右侧"今日重点"面板 -->
     <aside id="right-panel">
       <div id="right-panel-loading">加载中...</div>
     </aside>

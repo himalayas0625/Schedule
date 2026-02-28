@@ -12,7 +12,7 @@
 .col-header {
   padding: 6px 4px;
   text-align: center;
-  border-right: 1px solid var(--border);
+  border-right: none;
   cursor: pointer;
   transition: background var(--transition);
   display: flex;
@@ -33,16 +33,19 @@
   color: var(--today-accent);
 }
 
+[data-theme="light"] .col-header.today .day-name {
+  color: var(--text-muted);
+}
+
 .col-header.today.selected {
-  background: rgba(232, 168, 56, 0.12);
+  background: rgba(255, 149, 0, 0.12);
 }
 
 .day-name {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   height: 14px;
   line-height: 14px;
 }
@@ -74,6 +77,36 @@
   color: #fff;
 }
 
+/* 亮色主题：今日圆圈用半透明淡橙 + 深橙文字 */
+[data-theme="light"] .col-header.today .day-num::before {
+  background: rgba(255, 149, 0, 0.15);
+}
+
+[data-theme="light"] .col-header.today .day-num {
+  color: #FF9500;
+}
+
+/* "今日"小标签 —— 预留高度保证所有列对齐 */
+.today-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: transparent;
+  height: 13px;
+  line-height: 13px;
+  margin-top: 2px;
+}
+
+.col-header.today .today-label {
+  color: #FF9500;
+  opacity: 0.75;
+}
+
+[data-theme="light"] .col-header.today .today-label {
+  color: var(--text-primary);
+  opacity: 0.6;
+}
+
 .time-gutter-header {
   display: flex;
   align-items: center;
@@ -97,10 +130,10 @@
 
 /* 时间标签：整点渲染，跨 2 行，文字垂直居中 */
 .time-label {
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text-muted);
   background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
+  border-right: none;
   position: sticky;
   left: 0;
   z-index: 1;
@@ -108,13 +141,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.55;
+}
+
+/* 亮色主题：时间标签融入暖色背景，不显白色面板 */
+[data-theme="light"] .time-label {
+  background: transparent;
+  opacity: 0.6;
 }
 
 /* ── 单元格 ───────────────────────────────────────── */
 .grid-cell {
   padding: 2px 5px;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: none;
+  border-bottom: none;
   cursor: pointer;
   font-size: 11px;
   line-height: 1.3;
@@ -127,9 +167,13 @@
   color: var(--text-muted);
 }
 
-/* 整点行：加深上边框作为小时分隔线 */
+/* 整点行：极浅虚线作为小时分隔 */
 .grid-cell.on-hour {
-  border-top: 1px solid var(--border);
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .grid-cell.on-hour {
+  border-top: 1px dashed rgba(0, 0, 0, 0.05);
 }
 
 .grid-cell:last-child { border-right: none; }
@@ -140,12 +184,13 @@
   background: var(--bg-event);
   color: var(--accent);
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 12px;
   width: calc(100% - 6px);
   margin-left: 3px;
   margin-right: 3px;
   margin-top: 2px;
   margin-bottom: 2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
 .grid-cell.dragging {
@@ -160,20 +205,73 @@
   background: rgba(var(--accent-rgb), 0.28);
 }
 
-/* ── 亮色主题覆盖 ─────────────────────────────────── */
+/* ── 暗色主题任务分类 ─────────────────────────────── */
 
-/* 事件块：浅蓝底 + 深蓝字 + 深蓝左边框 */
-[data-theme="light"] .grid-cell.has-event {
-  background: var(--bg-event);            /* #e8f0fe */
-  color: var(--event-text);               /* #174ea6 */
-  border-left: 3px solid var(--event-border); /* #1967d2 */
-  padding-left: 4px;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.2);
-  font-weight: 500;
+/* 重要任务（!前缀） */
+[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.event-important),
+:root .grid-cell.has-event:not(.multi-event):has(.event-important) {
+  background: var(--event-bg-important);
+  color: var(--event-text-important);
 }
 
-/* 并列模式：cell 本身不显示 border-left，由各 block 自己展示 */
+/* 个人生活（@前缀） */
+[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.event-personal),
+:root .grid-cell.has-event:not(.multi-event):has(.event-personal) {
+  background: var(--event-bg-personal);
+  color: var(--event-text-personal);
+}
+
+/* 暗色并列 block 分类 */
+[data-theme="dark"] .grid-cell.multi-event .event-block.event-important,
+:root .grid-cell.multi-event .event-block.event-important {
+  background: var(--event-bg-important);
+  color: var(--event-text-important);
+}
+
+[data-theme="dark"] .grid-cell.multi-event .event-block.event-personal,
+:root .grid-cell.multi-event .event-block.event-personal {
+  background: var(--event-bg-personal);
+  color: var(--event-text-personal);
+}
+
+/* ── 亮色主题竖线分隔 ─────────────────────────────── */
+[data-theme="light"] .grid-cell {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .col-header {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .time-label {
+  border-right: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+/* ── 亮色主题覆盖 ─────────────────────────────────── */
+
+/* 事件块：普通日程（浅蓝底 + 靛蓝字），无 border-left */
+[data-theme="light"] .grid-cell.has-event {
+  background: var(--bg-event);
+  color: var(--event-text);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  font-weight: 500;
+  padding: 4px 10px;
+}
+
+/* 重要任务（!前缀）：浅红底 + 深红字 */
+[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.event-important) {
+  background: var(--event-bg-important);
+  color: var(--event-text-important);
+}
+
+/* 个人生活（@前缀）：浅紫底 + 紫字 */
+[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.event-personal) {
+  background: var(--event-bg-personal);
+  color: var(--event-text-personal);
+}
+
+/* 并列模式：cell 透明，各 block 独立展示 */
 [data-theme="light"] .grid-cell.multi-event {
   border-left: none;
   padding-left: 0;
@@ -181,13 +279,13 @@
   background: var(--bg-primary) !important;
 }
 
-/* 选中列：Google 蓝色浅背景 */
+/* 选中列：蓝色浅背景 */
 [data-theme="light"] .grid-cell.selected-col {
-  background: var(--bg-selected);         /* rgba(26,115,232,0.08) */
+  background: var(--bg-selected);
 }
 
 [data-theme="light"] .grid-cell.has-event.selected-col {
-  background: rgba(26, 115, 232, 0.20);
+  background: rgba(26, 115, 232, 0.18);
 }
 
 /* ── 事件块（单格内的独立内容单元）──────────────────── */
@@ -219,8 +317,8 @@
   min-width: 0;
   background: var(--bg-event);
   color: var(--accent);
-  border-radius: 4px;
-  padding: 2px 4px;
+  border-radius: 8px;
+  padding: 2px 6px;
   font-size: 10px;
   font-weight: 500;
   overflow: hidden;
@@ -234,9 +332,17 @@
 [data-theme="light"] .grid-cell.multi-event .event-block {
   background: var(--bg-event);
   color: var(--event-text);
-  border-left: 2px solid var(--event-border);
-  padding-left: 3px;
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.2);
+  box-shadow: 0 1px 2px rgba(44, 62, 80, 0.10);
+}
+
+[data-theme="light"] .grid-cell.multi-event .event-block.event-important {
+  background: var(--event-bg-important);
+  color: var(--event-text-important);
+}
+
+[data-theme="light"] .grid-cell.multi-event .event-block.event-personal {
+  background: var(--event-bg-personal);
+  color: var(--event-text-personal);
 }
 
 .event-block.dragging {

@@ -6,8 +6,16 @@ function getTodayStr() {
 }
 
 // ── 通用渲染函数（左侧和右侧面板共用）────────────────────────────────────────
-function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onChange }) {
+function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onChange, logo }) {
   panelEl.innerHTML = ''
+
+  // ── 应用 Logo（仅左侧面板使用）────────────────────
+  if (logo) {
+    const logoEl = document.createElement('div')
+    logoEl.className = 'sidebar-logo'
+    logoEl.textContent = logo
+    panelEl.appendChild(logoEl)
+  }
 
   // ── 日期/标题头部 ──────────────────────────────────
   const header = document.createElement('div')

@@ -191,7 +191,7 @@ export const WeekGrid = {
     // 左上角时间槽空白
     const gutter = document.createElement('div')
     gutter.className = 'time-gutter-header'
-    gutter.textContent = 'GMT+8'
+    gutter.textContent = ''
     header.appendChild(gutter)
 
     weekDates.forEach(dateStr => {
@@ -213,8 +213,13 @@ export const WeekGrid = {
       dayNum.className = 'day-num'
       dayNum.textContent = date.getDate()
 
+      const todayLabel = document.createElement('span')
+      todayLabel.className = 'today-label'
+      todayLabel.textContent = isToday ? '今日' : ''
+
       col.appendChild(dayName)
       col.appendChild(dayNum)
+      col.appendChild(todayLabel)
       col.addEventListener('click', () => callbacks.onSelectDate(dateStr))
       header.appendChild(col)
     })
@@ -361,6 +366,16 @@ export const WeekGrid = {
   }
 }
 
+// ── 根据前缀自动分类（!重要  @个人）────────────────────────────────────────────
+function _applyCategoryClass(el, text) {
+  el.classList.remove('event-important', 'event-personal')
+  if (text.startsWith('!') || text.startsWith('！')) {
+    el.classList.add('event-important')
+  } else if (text.startsWith('@')) {
+    el.classList.add('event-personal')
+  }
+}
+
 // ── 创建事件 block ─────────────────────────────────────────────────────────────
 function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
   const block = document.createElement('div')
@@ -369,6 +384,7 @@ function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
   block.title = text
   block.draggable = true
   block.dataset.index = idx
+  _applyCategoryClass(block, text)
 
   // 点击 block → 编辑该事件
   block.addEventListener('click', (e) => {
@@ -381,6 +397,7 @@ function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
         if (newText) {
           block.textContent = newText
           block.title = newText
+          _applyCategoryClass(block, newText)
           callbacks.onEventItemChange(dateStr, timeSlot, currentIdx, newText)
         } else {
           _removeBlock(block, cell)
