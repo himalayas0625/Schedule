@@ -18,7 +18,27 @@ function getTodayStr() {
 
 let currentRedLineEl = null
 let redLineTimer = null
-let _dragState = null   // { date, timeSlot, text }
+let _dragState = null   // { date, timeSlot, index, text }
+
+// ── 辅助：读取 slot 的 items 数组（兼容旧格式 { text }）────────────────────────
+function getSlotItems(eventsData, dateStr, timeSlot) {
+  const raw = eventsData?.[dateStr]?.[timeSlot]
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw
+  return [raw] // 旧格式 { text } 兼容
+}
+
+// ── 辅助：移除 block，重编剩余 block 的 data-index，更新 cell class ──────────
+function _removeBlock(block, cell) {
+  block.remove()
+  const remaining = cell.querySelectorAll('.event-block')
+  if (remaining.length === 0) {
+    cell.classList.remove('has-event', 'multi-event')
+  } else {
+    cell.classList.remove('multi-event')
+    remaining.forEach((b, i) => { b.dataset.index = i })
+  }
+}
 
 // ── 浮动编辑框 ────────────────────────────────────────────────────────────────
 const FloatingEditor = {
@@ -84,7 +104,8 @@ const FloatingEditor = {
     document.addEventListener('mousedown', (e) => {
       if (this._editor.style.display !== 'none' &&
           !this._editor.contains(e.target) &&
-          !e.target.classList.contains('grid-cell')) {
+          !e.target.classList.contains('grid-cell') &&
+          !e.target.classList.contains('event-block')) {
         this.commit()
       }
     })
@@ -227,7 +248,6 @@ export const WeekGrid = {
       weekDates.forEach((dateStr, colIndex) => {
         const cell = document.createElement('div')
         cell.className = 'grid-cell'
-        // 整点行（非第一行）加深上边框，作为小时分隔线
         if (isHour && rowIndex > 0) cell.classList.add('on-hour')
         cell.dataset.date = dateStr
         cell.dataset.time = timeSlot
@@ -235,60 +255,36 @@ export const WeekGrid = {
         cell.style.gridRow = String(gridRow)
         if (dateStr === selectedDate) cell.classList.add('selected-col')
 
-        const eventText = eventsData?.[dateStr]?.[timeSlot]?.text || ''
-        if (eventText) {
-          cell.textContent = eventText
+        // 读取该 slot 的事件列表
+        const items = getSlotItems(eventsData, dateStr, timeSlot)
+        if (items.length > 0) {
           cell.classList.add('has-event')
-          cell.title = eventText
-          cell.draggable = true
+          if (items.length >= 2) cell.classList.add('multi-event')
+          items.forEach((item, idx) => {
+            cell.appendChild(_makeEventBlock(item.text, idx, cell, dateStr, timeSlot, callbacks))
+          })
         }
 
+        // 点击空 cell → 新建事件
         cell.addEventListener('click', () => {
+          if (cell.querySelector('.event-block')) return // 由 block 处理
           FloatingEditor.open(
-            cell,
-            cell.textContent.trim(),
+            cell, '',
             (newText) => {
               if (newText) {
-                cell.textContent = newText
-                cell.title = newText
+                const block = _makeEventBlock(newText, 0, cell, dateStr, timeSlot, callbacks)
+                cell.appendChild(block)
                 cell.classList.add('has-event')
-                cell.draggable = true
                 callbacks.onEventChange(dateStr, timeSlot, newText)
-              } else {
-                cell.textContent = ''
-                cell.title = ''
-                cell.classList.remove('has-event')
-                cell.draggable = false
-                callbacks.onEventClear(dateStr, timeSlot)
               }
-            },
-            () => {
-              // 垃圾桶：直接删除
-              cell.textContent = ''
-              cell.title = ''
-              cell.classList.remove('has-event')
-              cell.draggable = false
-              callbacks.onEventClear(dateStr, timeSlot)
             }
           )
-        })
-
-        // ── 拖拽监听器（无条件绑定，draggable 属性动态控制是否可拖）──
-        cell.addEventListener('dragstart', (e) => {
-          if (!cell.draggable) return
-          _dragState = { date: dateStr, timeSlot, text: cell.textContent.trim() }
-          e.dataTransfer.effectAllowed = 'move'
-          e.dataTransfer.setData('text/plain', _dragState.text) // Chromium 必须调用
-          setTimeout(() => cell.classList.add('dragging'), 0)
-        })
-        cell.addEventListener('dragend', () => {
-          cell.classList.remove('dragging')
-          _dragState = null
         })
 
         // 所有格子都是放置目标
         cell.addEventListener('dragover', (e) => {
           if (!_dragState) return
+          if (cell.querySelectorAll('.event-block').length >= 2) return // 最多 2 个
           e.preventDefault()
           e.dataTransfer.dropEffect = 'move'
           cell.classList.add('drag-over')
@@ -300,30 +296,38 @@ export const WeekGrid = {
           e.preventDefault()
           cell.classList.remove('drag-over')
           if (!_dragState) return
-          const { date: srcDate, timeSlot: srcSlot, text } = _dragState
+          const { date: srcDate, timeSlot: srcSlot, index: srcIdx, text } = _dragState
           _dragState = null
           if (srcDate === dateStr && srcSlot === timeSlot) return
 
-          // DOM：清除来源格
+          const existingBlocks = cell.querySelectorAll('.event-block')
+          if (existingBlocks.length >= 2) return // 拒绝第三个
+
+          // 清除来源格中被拖动的 block
           const srcCell = document.querySelector(
             `.grid-cell[data-date="${srcDate}"][data-time="${srcSlot}"]`
           )
           if (srcCell) {
-            srcCell.textContent = ''
-            srcCell.title = ''
-            srcCell.classList.remove('has-event', 'dragging')
-            srcCell.draggable = false
+            const srcBlocks = srcCell.querySelectorAll('.event-block')
+            if (srcBlocks[srcIdx]) {
+              _removeBlock(srcBlocks[srcIdx], srcCell)
+            }
           }
 
-          // DOM：更新目标格
-          cell.textContent = text
-          cell.title = text
+          // 添加到目标格
+          const newIdx = existingBlocks.length // 0 或 1
+          const block = _makeEventBlock(text, newIdx, cell, dateStr, timeSlot, callbacks)
+          cell.appendChild(block)
           cell.classList.add('has-event')
-          cell.draggable = true
+          if (newIdx === 1) cell.classList.add('multi-event')
 
           // 数据持久化
-          callbacks.onEventClear(srcDate, srcSlot)
-          callbacks.onEventChange(dateStr, timeSlot, text)
+          callbacks.onEventItemClear(srcDate, srcSlot, srcIdx)
+          if (newIdx === 0) {
+            callbacks.onEventChange(dateStr, timeSlot, text)
+          } else {
+            callbacks.onEventAdd(dateStr, timeSlot, text)
+          }
         })
 
         body.appendChild(cell)
@@ -355,4 +359,61 @@ export const WeekGrid = {
       el.classList.toggle('selected', el.dataset.date === newDate)
     })
   }
+}
+
+// ── 创建事件 block ─────────────────────────────────────────────────────────────
+function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
+  const block = document.createElement('div')
+  block.className = 'event-block'
+  block.textContent = text
+  block.title = text
+  block.draggable = true
+  block.dataset.index = idx
+
+  // 点击 block → 编辑该事件
+  block.addEventListener('click', (e) => {
+    e.stopPropagation()
+    FloatingEditor.open(
+      cell,
+      block.textContent.trim(),
+      (newText) => {
+        const currentIdx = parseInt(block.dataset.index)
+        if (newText) {
+          block.textContent = newText
+          block.title = newText
+          callbacks.onEventItemChange(dateStr, timeSlot, currentIdx, newText)
+        } else {
+          _removeBlock(block, cell)
+          callbacks.onEventItemClear(dateStr, timeSlot, currentIdx)
+        }
+      },
+      () => {
+        // 垃圾桶删除
+        const currentIdx = parseInt(block.dataset.index)
+        _removeBlock(block, cell)
+        callbacks.onEventItemClear(dateStr, timeSlot, currentIdx)
+      }
+    )
+  })
+
+  // 拖拽开始
+  block.addEventListener('dragstart', (e) => {
+    _dragState = {
+      date: dateStr,
+      timeSlot,
+      index: parseInt(block.dataset.index),
+      text: block.textContent.trim()
+    }
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', _dragState.text)
+    e.stopPropagation()
+    setTimeout(() => block.classList.add('dragging'), 0)
+  })
+
+  block.addEventListener('dragend', () => {
+    block.classList.remove('dragging')
+    _dragState = null
+  })
+
+  return block
 }

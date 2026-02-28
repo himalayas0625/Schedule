@@ -92,6 +92,15 @@ async function init() {
       },
       onEventClear(dateStr, timeSlot) {
         dm.clearEvent(weekKey, dateStr, timeSlot)
+      },
+      onEventAdd(dateStr, timeSlot, text) {
+        dm.addEvent(weekKey, dateStr, timeSlot, text)
+      },
+      onEventItemChange(dateStr, timeSlot, index, text) {
+        dm.setEventItem(weekKey, dateStr, timeSlot, text, index)
+      },
+      onEventItemClear(dateStr, timeSlot, index) {
+        dm.clearEventItem(weekKey, dateStr, timeSlot, index)
       }
     })
 

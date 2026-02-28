@@ -22,22 +22,76 @@ export class DataManager {
     return this._data.weeks[weekKey]
   }
 
-  // ── 事件 ──────────────────────────────────────────
+  // ── 事件（多事件数组格式）─────────────────────────────
+  // 私有：统一读取为数组，兼容旧格式 { text }
+  _getItems(weekKey, dateStr, timeSlot) {
+    const raw = this._data.weeks[weekKey]?.events?.[dateStr]?.[timeSlot]
+    if (!raw) return []
+    if (Array.isArray(raw)) return raw
+    return [raw] // 旧格式 { text } 兼容
+  }
+
+  // 设置 index 0 处的事件（新建或覆盖首个）
   async setEvent(weekKey, dateStr, timeSlot, text) {
     this._ensureWeek(weekKey)
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {}
     }
-    this._data.weeks[weekKey].events[dateStr][timeSlot] = { text }
+    const items = this._getItems(weekKey, dateStr, timeSlot)
+    if (items.length === 0) {
+      this._data.weeks[weekKey].events[dateStr][timeSlot] = [{ text }]
+    } else {
+      items[0] = { text }
+      this._data.weeks[weekKey].events[dateStr][timeSlot] = items
+    }
     await this._persistWeek(weekKey)
   }
 
+  // 更新指定 index 处的事件
+  async setEventItem(weekKey, dateStr, timeSlot, text, index) {
+    this._ensureWeek(weekKey)
+    if (!this._data.weeks[weekKey].events[dateStr]) {
+      this._data.weeks[weekKey].events[dateStr] = {}
+    }
+    const items = this._getItems(weekKey, dateStr, timeSlot)
+    items[index] = { text }
+    this._data.weeks[weekKey].events[dateStr][timeSlot] = items
+    await this._persistWeek(weekKey)
+  }
+
+  // 追加一个新事件到当前 slot
+  async addEvent(weekKey, dateStr, timeSlot, text) {
+    this._ensureWeek(weekKey)
+    if (!this._data.weeks[weekKey].events[dateStr]) {
+      this._data.weeks[weekKey].events[dateStr] = {}
+    }
+    const items = this._getItems(weekKey, dateStr, timeSlot)
+    items.push({ text })
+    this._data.weeks[weekKey].events[dateStr][timeSlot] = items
+    await this._persistWeek(weekKey)
+  }
+
+  // 清除整个 slot 的所有事件
   async clearEvent(weekKey, dateStr, timeSlot) {
     const day = this._data.weeks[weekKey]?.events?.[dateStr]
-    if (day?.[timeSlot]) {
+    if (day?.[timeSlot] !== undefined) {
       delete day[timeSlot]
       await this._persistWeek(weekKey)
     }
+  }
+
+  // 清除 slot 中指定 index 的事件；若清空则删除整个 slot key
+  async clearEventItem(weekKey, dateStr, timeSlot, index) {
+    const day = this._data.weeks[weekKey]?.events?.[dateStr]
+    if (!day?.[timeSlot]) return
+    const items = this._getItems(weekKey, dateStr, timeSlot)
+    items.splice(index, 1)
+    if (items.length === 0) {
+      delete day[timeSlot]
+    } else {
+      day[timeSlot] = items
+    }
+    await this._persistWeek(weekKey)
   }
 
   // ── 笔记 ──────────────────────────────────────────

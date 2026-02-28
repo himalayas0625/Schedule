@@ -182,6 +182,58 @@
   background: rgba(26, 115, 232, 0.20);
 }
 
+/* ── 事件块（单格内的独立内容单元）──────────────────── */
+
+/* 单事件：block 全宽，继承 cell 的颜色/背景 */
+.grid-cell.has-event:not(.multi-event) .event-block {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* 双事件：cell 变为透明 flex 容器，每个 block 独立带背景 */
+.grid-cell.multi-event {
+  background: transparent !important;
+  display: flex;
+  flex-direction: row;
+  padding: 2px;
+  gap: 2px;
+}
+
+.grid-cell.multi-event .event-block {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-event);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+[data-theme="light"] .grid-cell.multi-event .event-block {
+  background: var(--bg-event);
+  color: var(--event-text);
+  border-left: 2px solid var(--event-border);
+  padding-left: 3px;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.2);
+}
+
+.event-block.dragging {
+  opacity: 0.35;
+}
+
 /* ── 当前时间红线 ─────────────────────────────────── */
 .current-time-line {
   position: absolute;
