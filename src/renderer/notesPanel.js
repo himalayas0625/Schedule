@@ -118,9 +118,9 @@ export const NotesPanel = {
     renderTo(panel, {
       items: notesData,
       title: `${monthDay} ${dayName}`,
-      sub: isToday ? '今天的重点' : '当日重点',
+      sub: isToday ? '今日重点' : '当日重点',
       isHighlight: isToday,
-      placeholders: ['最重要的事', '第二件事', '第三件事'],
+      placeholders: ['第一件事', '第二件事', '第三件事'],
       onChange(index, val) {
         callbacks.onChange(selectedDate, index, val)
       }
