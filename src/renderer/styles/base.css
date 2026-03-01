@@ -33,33 +33,33 @@
   --event-text-personal:  #CE93D8;
 }
 
-/* 亮色主题 —— Modern Layered */
+/* 亮色主题 —— Warm Modern */
 [data-theme="light"] {
-  /* 背景分层：网格区暖米灰 / 侧边栏纯白 */
-  --bg-primary:    #F7F5F2;
+  /* 背景分层：网格区暖杏米 / 侧边栏纯白 */
+  --bg-primary:    #F2EAE0;
   --bg-secondary:  #ffffff;
-  --bg-cell-hover: #EDE9E4;
-  --bg-event:      #D4E8F7;
-  /* 文字三层级 */
-  --text-primary:  #2C3E50;
-  --text-muted:    #5D6D7E;
-  --text-aux:      #BDC3C7;
-  /* 边框 & 阴影 */
-  --border:        #D5DCE8;
-  --shadow:        0 12px 40px rgba(44, 62, 80, 0.12), 0 2px 8px rgba(44, 62, 80, 0.07);
+  --bg-cell-hover: #EAE0D5;
+  --bg-event:      #C8DFF5;
+  /* 文字三层级（暖棕调） */
+  --text-primary:  #2C2416;
+  --text-muted:    #7A6E65;
+  --text-aux:      #C0B4A8;
+  /* 边框 & 阴影（暖棕，去冷蓝） */
+  --border:        #CEC4B8;
+  --shadow:        0 12px 40px rgba(100, 75, 50, 0.14), 0 2px 8px rgba(100, 75, 50, 0.08);
   /* 品牌色：爱马仕橙 */
   --today-accent:  #FF9500;
-  /* 普通日程（粉彩蓝） */
-  --event-text:    #3A6B8A;
-  --event-border:  #4A90D9;
-  /* 重要任务（粉彩珊瑚红） */
-  --event-bg-important:   #F8D7D2;
-  --event-text-important: #8C4040;
-  /* 个人生活（粉彩薰衣草紫） */
-  --event-bg-personal:    #E0D2F4;
-  --event-text-personal:  #604090;
+  /* 普通日程（饱和蓝） */
+  --event-text:    #2E5F82;
+  --event-border:  #3A80C0;
+  /* 重要任务（饱和珊瑚红） */
+  --event-bg-important:   #F5C8C0;
+  --event-text-important: #8B3030;
+  /* 个人生活（饱和薰衣草紫） */
+  --event-bg-personal:    #D8C8F0;
+  --event-text-personal:  #5A3888;
   /* 选中列背景 */
-  --bg-selected:   rgba(26, 115, 232, 0.06);
+  --bg-selected:   rgba(180, 130, 70, 0.08);
 }
 
 /* ── Reset ───────────────────────────────────────── */

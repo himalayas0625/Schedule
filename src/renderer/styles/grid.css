@@ -86,13 +86,13 @@
   color: #fff;
 }
 
-/* 亮色主题：今日圆圈用半透明淡橙 + 深橙文字 */
+/* 亮色主题：今日圆圈渐变橙 + 白字 */
 [data-theme="light"] .col-header.today .day-num::before {
-  background: rgba(255, 149, 0, 0.15);
+  background: linear-gradient(45deg, #FF9500, #FFB347);
 }
 
 [data-theme="light"] .col-header.today .day-num {
-  color: #FF9500;
+  color: #ffffff;
 }
 
 /* "今日"小标签 —— 已隐藏 */

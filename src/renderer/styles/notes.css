@@ -44,7 +44,7 @@
 }
 
 [data-theme="light"] .notes-date-title {
-  color: #95A5A6;
+  color: #9A7E6E;
 }
 
 .notes-label {
@@ -87,29 +87,29 @@
   background: #ffffff;
   border-radius: 14px;
   padding: 14px 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 30px rgba(140, 115, 85, 0.10);
   border: none;
 }
 
 [data-theme="light"] .note-item:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 36px rgba(140, 115, 85, 0.16);
   transform: translateY(-2px);
 }
 
-/* 莫兰迪 35%：白卡上叠加淡色调，层次感与参考图一致 */
+/* 55%：饱和度提升，色调更鲜明 */
 [data-theme="light"] #notes-panel .note-item:nth-child(1),
 [data-theme="light"] #notes-panel .note-item:nth-child(2) {
-  background: rgba(200, 228, 248, 0.35);
+  background: rgba(180, 220, 248, 0.55);
 }
 [data-theme="light"] #notes-panel .note-item:nth-child(3) {
-  background: rgba(248, 215, 205, 0.35);
+  background: rgba(248, 205, 188, 0.55);
 }
 [data-theme="light"] #right-panel .note-item:nth-child(1) {
-  background: rgba(253, 225, 205, 0.35);
+  background: rgba(252, 215, 185, 0.55);
 }
 [data-theme="light"] #right-panel .note-item:nth-child(2),
 [data-theme="light"] #right-panel .note-item:nth-child(3) {
-  background: rgba(200, 228, 248, 0.35);
+  background: rgba(180, 220, 248, 0.55);
 }
 
 .note-num {
