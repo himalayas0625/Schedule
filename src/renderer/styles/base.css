@@ -6,7 +6,9 @@
   --today-accent-rgb: 255, 149, 0;
   --danger: #ff4d4f;
   --radius: 10px;
-  --title-bar-height: 44px;
+  --system-bar-height: 32px;
+  --toolbar-height: 44px;
+  --title-bar-height: 76px; /* system-bar + toolbar，供侧边栏/网格定位用 */
   --notes-width: 190px;
   --time-label-width: 52px;
   --cell-height: 40px;

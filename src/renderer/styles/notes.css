@@ -7,8 +7,8 @@
 }
 
 .notes-date-header {
-  /* margin-top "挂"到 44px：透明浮于侧边栏统一材质之上 */
-  margin-top: var(--title-bar-height);
+  /* margin-top "挂"到 32px（系统栏底部）：浮于侧边栏材质之上，导航栏透明浮于中间 */
+  margin-top: calc(var(--system-bar-height) + 10px);
   padding: 0 16px;
   display: flex;
   flex-direction: column;
@@ -20,7 +20,7 @@
 /* 主标题（order:1 先渲染）：y=44-68，在呼吸区内 */
 .notes-date-sub {
   order: 1;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.2;
@@ -30,7 +30,7 @@
 /* 副日期（order:2 后渲染）：y≈72，与网格列表头光学共线 */
 .notes-date-title {
   order: 2;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--text-muted);
   letter-spacing: 0.2px;
@@ -186,14 +186,7 @@
   color: rgba(93, 109, 126, 0.5);
 }
 
-/* ── 今日高亮 ─────────────────────────────────────── */
-.notes-today .notes-date-title {
-  color: var(--today-accent);
-}
-
-[data-theme="light"] .notes-today .notes-date-title {
-  color: var(--text-primary);
-}
+/* 今日高亮：日期行颜色与左侧保持统一，不单独着色 */
 
 /* ── 底部提示 ─────────────────────────────────────── */
 .notes-footer {

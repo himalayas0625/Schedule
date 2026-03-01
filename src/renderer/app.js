@@ -4,6 +4,11 @@ import { DataManager } from './dataManager.js'
 
 // ── 工具函数 ──────────────────────────────────────────────────────────────────
 
+// 将 Date 格式化为本地日期字符串（避免 toISOString 的 UTC 偏移问题）
+function toLocalDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 // 获取 ISO 周字符串 "YYYY-Www"
 function getISOWeekKey(date) {
   const d = new Date(date)
@@ -28,7 +33,7 @@ function getWeekDates(offset = 0, startOfWeek = 1) {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
-    return d.toISOString().split('T')[0]
+    return toLocalDateStr(d)
   })
 }
 
@@ -54,7 +59,7 @@ async function init() {
   const dm = new DataManager()
   await dm.load()
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = toLocalDateStr(new Date())
   let currentOffset = 0                     // 0 = 本周
   let selectedDate = today                  // 当前选中列
 
@@ -62,7 +67,7 @@ async function init() {
 
   // ── 渲染函数 ────────────────────────────────────────
   function render() {
-    const weekDates = getWeekDates(currentOffset, dm.settings.startOfWeek ?? 1)
+    const weekDates = getWeekDates(currentOffset, dm.settings.startOfWeek ?? 0)
     const weekKey = getISOWeekKey(new Date(weekDates[0] + 'T12:00:00'))
     const weekData = dm.getWeekData(weekKey)
 

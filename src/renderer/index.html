@@ -11,9 +11,17 @@
   <link rel="stylesheet" href="styles/notes.css">
 </head>
 <body>
-  <!-- 标题栏 -->
-  <div id="title-bar">
+  <!-- Layer 1：系统标题栏（32px，仅窗口控件） -->
+  <div id="system-bar">
+    <div id="window-controls">
+      <button id="btn-minimize" title="最小化">&#8211;</button>
+      <button id="btn-maximize" title="最大化">&#9633;</button>
+      <button id="btn-close" title="关闭到托盘">&#215;</button>
+    </div>
+  </div>
 
+  <!-- Layer 2：应用导航栏（44px，标题 + 周导航居中） -->
+  <div id="toolbar">
     <div id="title-center">
       <span id="app-title">日程</span>
       <div id="week-nav">
@@ -21,12 +29,6 @@
         <button id="btn-week-label" title="回到本周">本周</button>
         <button id="btn-next-week" title="下一周">&#8250;</button>
       </div>
-    </div>
-
-    <div id="window-controls">
-      <button id="btn-minimize" title="最小化">&#8211;</button>
-      <button id="btn-maximize" title="最大化">&#9633;</button>
-      <button id="btn-close" title="关闭到托盘">&#215;</button>
     </div>
   </div>
 
