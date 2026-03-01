@@ -144,6 +144,8 @@
 [data-theme="light"] #sidebar-resizer,
 [data-theme="light"] #right-resizer {
   background: transparent;
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: 28px;
 }
 [data-theme="light"] #sidebar-resizer:hover,
 [data-theme="light"] #right-resizer:hover {
@@ -171,13 +173,16 @@
 }
 
 [data-theme="light"] #notes-panel {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: none;
-  border-radius: 0;
-  margin: 0;
-  box-shadow: none;
+  border-radius: 12px;
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: 28px;
+  margin-left: 10px;
+  margin-right: 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 /* ── 日程网格容器（中间区背景 = bg-primary，与莫兰迪主色一致） */
@@ -204,13 +209,16 @@
 }
 
 [data-theme="light"] #right-panel {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-left: none;
-  border-radius: 0;
-  margin: 0;
-  box-shadow: none;
+  border-radius: 12px;
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: 28px;
+  margin-right: 10px;
+  margin-left: 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 /* ── 右侧边栏拖拽手柄 ────────────────────────────── */

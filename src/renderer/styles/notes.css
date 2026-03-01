@@ -60,44 +60,17 @@
 
 /* ── 三件事列表 ───────────────────────────────────── */
 .notes-list {
-  padding: 4px 12px 20px;
+  padding: 4px 10px 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .note-item {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
-  padding: 4px 0;
-  transition: all 0.2s ease;
-}
-
-/* 亮色：基础卡片样式 */
-[data-theme="light"] .note-item {
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
-  border: none;
-}
-
-/* 左面板 (#notes-panel = 本周重点): 条目1&2 粉彩蓝，条目3 粉彩珊瑚 */
-[data-theme="light"] #notes-panel .note-item:nth-child(1),
-[data-theme="light"] #notes-panel .note-item:nth-child(2) {
-  background: rgba(200, 228, 248, 0.85);
-}
-[data-theme="light"] #notes-panel .note-item:nth-child(3) {
-  background: rgba(248, 215, 205, 0.85);
-}
-
-/* 右面板 (#right-panel = 今日重点): 条目1 粉彩珊瑚/橙，条目2&3 粉彩蓝 */
-[data-theme="light"] #right-panel .note-item:nth-child(1) {
-  background: rgba(253, 225, 205, 0.85);
-}
-[data-theme="light"] #right-panel .note-item:nth-child(2),
-[data-theme="light"] #right-panel .note-item:nth-child(3) {
-  background: rgba(200, 228, 248, 0.85);
+  gap: 10px;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
 }
 
 /* 暗色卡片 */
@@ -105,8 +78,38 @@
 :root .note-item {
   background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
-  padding: 6px 10px;
+  padding: 10px 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* 亮色：悬浮白卡基底 */
+[data-theme="light"] .note-item {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+[data-theme="light"] .note-item:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 莫兰迪 35%：白卡上叠加淡色调，层次感与参考图一致 */
+[data-theme="light"] #notes-panel .note-item:nth-child(1),
+[data-theme="light"] #notes-panel .note-item:nth-child(2) {
+  background: rgba(200, 228, 248, 0.35);
+}
+[data-theme="light"] #notes-panel .note-item:nth-child(3) {
+  background: rgba(248, 215, 205, 0.35);
+}
+[data-theme="light"] #right-panel .note-item:nth-child(1) {
+  background: rgba(253, 225, 205, 0.35);
+}
+[data-theme="light"] #right-panel .note-item:nth-child(2),
+[data-theme="light"] #right-panel .note-item:nth-child(3) {
+  background: rgba(200, 228, 248, 0.35);
 }
 
 .note-num {
@@ -129,26 +132,26 @@
 .note-item:nth-child(2) .note-num { background: rgba(var(--accent-rgb), 0.18); color: var(--accent); }
 .note-item:nth-child(3) .note-num { background: rgba(128, 128, 128, 0.15); color: var(--text-muted); }
 
-/* 左面板 badge：1&2 蓝，3 红 */
+/* 左面板 badge：1&2 深蓝，3 深珊瑚（白卡上加深） */
 [data-theme="light"] #notes-panel .note-item:nth-child(1) .note-num,
 [data-theme="light"] #notes-panel .note-item:nth-child(2) .note-num {
-  background: rgba(58, 107, 138, 0.18);
-  color: #3A6B8A;
+  background: rgba(42, 88, 120, 0.15);
+  color: #1E4D6B;
 }
 [data-theme="light"] #notes-panel .note-item:nth-child(3) .note-num {
-  background: rgba(140, 64, 64, 0.15);
-  color: #8C4040;
+  background: rgba(130, 50, 50, 0.15);
+  color: #7A3030;
 }
 
-/* 右面板 badge：1 橙，2&3 蓝 */
+/* 右面板 badge：1 深橙，2&3 深蓝（白卡上加深） */
 [data-theme="light"] #right-panel .note-item:nth-child(1) .note-num {
-  background: rgba(255, 149, 0, 0.20);
-  color: #C07828;
+  background: rgba(180, 100, 0, 0.15);
+  color: #955010;
 }
 [data-theme="light"] #right-panel .note-item:nth-child(2) .note-num,
 [data-theme="light"] #right-panel .note-item:nth-child(3) .note-num {
-  background: rgba(58, 107, 138, 0.18);
-  color: #3A6B8A;
+  background: rgba(42, 88, 120, 0.15);
+  color: #1E4D6B;
 }
 
 .note-input {
@@ -189,6 +192,11 @@
 /* 今日高亮：日期行颜色与左侧保持统一，不单独着色 */
 
 /* ── 底部提示 ─────────────────────────────────────── */
+#notes-panel .notes-footer,
+#right-panel .notes-footer {
+  display: none;
+}
+
 .notes-footer {
   padding: 8px 12px;
   font-size: 10px;
