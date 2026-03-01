@@ -23,7 +23,9 @@ function createTray(win, store) {
   function buildMenu() {
     const isVisible = win.isVisible()
     const isPinned = store.get('settings.alwaysOnTop') ?? true
-    const autoLaunch = store.get('settings.launchAtLogin') ?? false
+    const autoLaunch = app.isPackaged
+      ? app.getLoginItemSettings().openAtLogin
+      : (store.get('settings.launchAtLogin') ?? false)
 
     const menu = Menu.buildFromTemplate([
       {
@@ -48,8 +50,10 @@ function createTray(win, store) {
         type: 'checkbox',
         checked: autoLaunch,
         click: (item) => {
-          app.setLoginItemSettings({ openAtLogin: item.checked })
           store.set('settings.launchAtLogin', item.checked)
+          if (app.isPackaged) {
+            app.setLoginItemSettings({ openAtLogin: item.checked })
+          }
         }
       },
       { type: 'separator' },

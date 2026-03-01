@@ -106,6 +106,12 @@ ipcMain.on('window:updateShortcut', (_e, newShortcut) => {
 })
 
 app.whenReady().then(() => {
+  // 同步开机自启设置到系统（仅打包后生效，开发模式跳过）
+  if (app.isPackaged) {
+    const launchAtLogin = store.get('settings.launchAtLogin') ?? false
+    app.setLoginItemSettings({ openAtLogin: launchAtLogin })
+  }
+
   const win = createWindow(store)
   createTray(win, store)
   registerShortcut(win)
