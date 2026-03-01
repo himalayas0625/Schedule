@@ -32,41 +32,41 @@ export class DataManager {
   }
 
   // 设置 index 0 处的事件（新建或覆盖首个）
-  async setEvent(weekKey, dateStr, timeSlot, text) {
+  async setEvent(weekKey, dateStr, timeSlot, text, colorType = 0) {
     this._ensureWeek(weekKey)
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {}
     }
     const items = this._getItems(weekKey, dateStr, timeSlot)
     if (items.length === 0) {
-      this._data.weeks[weekKey].events[dateStr][timeSlot] = [{ text }]
+      this._data.weeks[weekKey].events[dateStr][timeSlot] = [{ text, colorType }]
     } else {
-      items[0] = { text }
+      items[0] = { text, colorType }
       this._data.weeks[weekKey].events[dateStr][timeSlot] = items
     }
     await this._persistWeek(weekKey)
   }
 
   // 更新指定 index 处的事件
-  async setEventItem(weekKey, dateStr, timeSlot, text, index) {
+  async setEventItem(weekKey, dateStr, timeSlot, text, index, colorType = 0) {
     this._ensureWeek(weekKey)
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {}
     }
     const items = this._getItems(weekKey, dateStr, timeSlot)
-    items[index] = { text }
+    items[index] = { text, colorType }
     this._data.weeks[weekKey].events[dateStr][timeSlot] = items
     await this._persistWeek(weekKey)
   }
 
   // 追加一个新事件到当前 slot
-  async addEvent(weekKey, dateStr, timeSlot, text) {
+  async addEvent(weekKey, dateStr, timeSlot, text, colorType = 0) {
     this._ensureWeek(weekKey)
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {}
     }
     const items = this._getItems(weekKey, dateStr, timeSlot)
-    items.push({ text })
+    items.push({ text, colorType })
     this._data.weeks[weekKey].events[dateStr][timeSlot] = items
     await this._persistWeek(weekKey)
   }

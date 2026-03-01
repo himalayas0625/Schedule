@@ -82,34 +82,27 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
 }
 
-/* 亮色：悬浮白卡基底 */
+/* 亮色：莫兰迪三色卡片 */
 [data-theme="light"] .note-item {
-  background: #ffffff;
   border-radius: 10px;
   padding: 14px 16px;
   box-shadow: 0 8px 30px rgba(140, 115, 85, 0.10);
   border: 1px solid rgba(140, 115, 85, 0.08);
 }
 
+[data-theme="light"] .note-item:nth-child(1) {
+  background: rgba(180, 220, 248, 0.35);
+}
+[data-theme="light"] .note-item:nth-child(2) {
+  background: rgba(175, 200, 155, 0.35);
+}
+[data-theme="light"] .note-item:nth-child(3) {
+  background: rgba(220, 185, 180, 0.35);
+}
+
 [data-theme="light"] .note-item:hover {
   box-shadow: 0 12px 36px rgba(140, 115, 85, 0.16);
   transform: translateY(-2px);
-}
-
-/* 莫兰迪 35%：白卡上叠加淡色调 */
-[data-theme="light"] #notes-panel .note-item:nth-child(1),
-[data-theme="light"] #notes-panel .note-item:nth-child(2) {
-  background: rgba(180, 220, 248, 0.35);
-}
-[data-theme="light"] #notes-panel .note-item:nth-child(3) {
-  background: rgba(248, 205, 188, 0.35);
-}
-[data-theme="light"] #right-panel .note-item:nth-child(1) {
-  background: rgba(252, 215, 185, 0.35);
-}
-[data-theme="light"] #right-panel .note-item:nth-child(2),
-[data-theme="light"] #right-panel .note-item:nth-child(3) {
-  background: rgba(180, 220, 248, 0.35);
 }
 
 .note-num {
@@ -132,24 +125,8 @@
 .note-item:nth-child(2) .note-num { background: rgba(var(--accent-rgb), 0.18); color: var(--accent); }
 .note-item:nth-child(3) .note-num { background: rgba(128, 128, 128, 0.15); color: var(--text-muted); }
 
-/* 左面板 badge：1&2 深蓝，3 深珊瑚（白卡上加深） */
-[data-theme="light"] #notes-panel .note-item:nth-child(1) .note-num,
-[data-theme="light"] #notes-panel .note-item:nth-child(2) .note-num {
-  background: rgba(42, 88, 120, 0.15);
-  color: #1E4D6B;
-}
-[data-theme="light"] #notes-panel .note-item:nth-child(3) .note-num {
-  background: rgba(130, 50, 50, 0.15);
-  color: #7A3030;
-}
-
-/* 右面板 badge：1 深橙，2&3 深蓝（白卡上加深） */
-[data-theme="light"] #right-panel .note-item:nth-child(1) .note-num {
-  background: rgba(180, 100, 0, 0.15);
-  color: #955010;
-}
-[data-theme="light"] #right-panel .note-item:nth-child(2) .note-num,
-[data-theme="light"] #right-panel .note-item:nth-child(3) .note-num {
+/* 亮色 badge：统一深蓝，与淡蓝卡片搭配 */
+[data-theme="light"] .note-item .note-num {
   background: rgba(42, 88, 120, 0.15);
   color: #1E4D6B;
 }

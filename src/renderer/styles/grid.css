@@ -458,3 +458,104 @@
 #sidebar-resizer.dragging {
   width: 2px;
 }
+
+/* ── 颜色类型（colorType: 0→.bg-blue, 1→.bg-red, 2→.bg-green）────── */
+
+/* 亮色：单格事件 */
+[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.bg-blue) {
+  background: var(--event-type-blue-bg);
+  color: var(--event-type-blue-text);
+  border-left: none;
+}
+[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.bg-red) {
+  background: var(--event-type-red-bg);
+  color: var(--event-type-red-text);
+  border-left: none;
+}
+[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.bg-green) {
+  background: var(--event-type-green-bg);
+  color: var(--event-type-green-text);
+  border-left: none;
+}
+
+/* 亮色：并列 block */
+[data-theme="light"] .grid-cell.multi-event .event-block.bg-blue {
+  background: var(--event-type-blue-bg);
+  color: var(--event-type-blue-text);
+  border-left: none;
+}
+[data-theme="light"] .grid-cell.multi-event .event-block.bg-red {
+  background: var(--event-type-red-bg);
+  color: var(--event-type-red-text);
+  border-left: none;
+}
+[data-theme="light"] .grid-cell.multi-event .event-block.bg-green {
+  background: var(--event-type-green-bg);
+  color: var(--event-type-green-text);
+  border-left: none;
+}
+
+/* 暗色：单格事件 */
+[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.bg-blue),
+:root .grid-cell.has-event:not(.multi-event):has(.bg-blue) {
+  background: #6E8EA1;
+  color: #ffffff;
+}
+[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.bg-red),
+:root .grid-cell.has-event:not(.multi-event):has(.bg-red) {
+  background: #BC7E79;
+  color: #ffffff;
+}
+[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.bg-green),
+:root .grid-cell.has-event:not(.multi-event):has(.bg-green) {
+  background: #8A9A73;
+  color: #ffffff;
+}
+
+/* 暗色：并列 block */
+[data-theme="dark"] .grid-cell.multi-event .event-block.bg-blue,
+:root .grid-cell.multi-event .event-block.bg-blue {
+  background: #6E8EA1;
+  color: #ffffff;
+}
+[data-theme="dark"] .grid-cell.multi-event .event-block.bg-red,
+:root .grid-cell.multi-event .event-block.bg-red {
+  background: #BC7E79;
+  color: #ffffff;
+}
+[data-theme="dark"] .grid-cell.multi-event .event-block.bg-green,
+:root .grid-cell.multi-event .event-block.bg-green {
+  background: #8A9A73;
+  color: #ffffff;
+}
+
+/* ── 编辑器颜色选择器 ─────────────────────────────── */
+.editor-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 2px 0;
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dot-color);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+
+.color-dot:hover {
+  opacity: 0.65;
+}
+
+.color-dot.active {
+  opacity: 1;
+}

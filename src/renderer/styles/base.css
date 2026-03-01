@@ -62,6 +62,16 @@
   --bg-selected:   rgba(180, 130, 70, 0.08);
 }
 
+/* ── 颜色类型变量（两种主题通用） ─────────────────── */
+:root {
+  --event-type-blue-bg:    #6E8EA1;
+  --event-type-blue-text:  #ffffff;
+  --event-type-red-bg:     #BC7E79;
+  --event-type-red-text:   #ffffff;
+  --event-type-green-bg:   #8A9A73;
+  --event-type-green-text: #ffffff;
+}
+
 /* ── Reset ───────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;

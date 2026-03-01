@@ -48,6 +48,8 @@ const FloatingEditor = {
   _onCommit: null,
   _onDelete: null,
   _currentCell: null,
+  _currentColorType: 0,
+  _colorDots: [],
 
   init() {
     this._editor = document.getElementById('floating-editor')
@@ -64,6 +66,30 @@ const FloatingEditor = {
       this.close()
     })
     this._editor.appendChild(trashBtn)
+
+    // 颜色选择器
+    const colorRow = document.createElement('div')
+    colorRow.className = 'editor-color-row'
+    const colorConfigs = [
+      { type: 0, color: '#6E8EA1', title: '蓝色' },
+      { type: 1, color: '#BC7E79', title: '红色' },
+      { type: 2, color: '#8A9A73', title: '绿色' }
+    ]
+    colorConfigs.forEach(({ type, color, title }) => {
+      const dot = document.createElement('button')
+      dot.className = 'color-dot'
+      dot.title = title
+      dot.dataset.colorType = type
+      dot.style.setProperty('--dot-color', color)
+      dot.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        this._currentColorType = type
+        this._updateDots()
+      })
+      colorRow.appendChild(dot)
+      this._colorDots.push(dot)
+    })
+    this._editor.appendChild(colorRow)
 
     // 底部提示
     const hint = document.createElement('div')
@@ -112,10 +138,18 @@ const FloatingEditor = {
     })
   },
 
-  open(cell, currentText, onCommit, onDelete) {
+  _updateDots() {
+    this._colorDots.forEach(dot => {
+      dot.classList.toggle('active', parseInt(dot.dataset.colorType) === this._currentColorType)
+    })
+  },
+
+  open(cell, currentText, currentColorType, onCommit, onDelete) {
     this._onCommit = onCommit
     this._onDelete = onDelete || null
     this._currentCell = cell
+    this._currentColorType = currentColorType ?? 0
+    this._updateDots()
 
     // 定位：尝试在格子下方，边界检测
     const rect = cell.getBoundingClientRect()
@@ -142,7 +176,7 @@ const FloatingEditor = {
   commit() {
     if (this._editor.style.display === 'none') return
     const text = this._textarea.value.trim()
-    if (this._onCommit) this._onCommit(text)
+    if (this._onCommit) this._onCommit(text, this._currentColorType)
     this.close()
   },
 
@@ -156,6 +190,7 @@ const FloatingEditor = {
     this._onCommit = null
     this._onDelete = null
     this._currentCell = null
+    this._currentColorType = 0
   }
 }
 
@@ -267,7 +302,7 @@ export const WeekGrid = {
           cell.classList.add('has-event')
           if (items.length >= 2) cell.classList.add('multi-event')
           items.forEach((item, idx) => {
-            cell.appendChild(_makeEventBlock(item.text, idx, cell, dateStr, timeSlot, callbacks))
+            cell.appendChild(_makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks))
           })
         }
 
@@ -275,13 +310,13 @@ export const WeekGrid = {
         cell.addEventListener('click', () => {
           if (cell.querySelector('.event-block')) return // 由 block 处理
           FloatingEditor.open(
-            cell, '',
-            (newText) => {
+            cell, '', 0,
+            (newText, newColorType) => {
               if (newText) {
-                const block = _makeEventBlock(newText, 0, cell, dateStr, timeSlot, callbacks)
+                const block = _makeEventBlock({ text: newText, colorType: newColorType }, 0, cell, dateStr, timeSlot, callbacks)
                 cell.appendChild(block)
                 cell.classList.add('has-event')
-                callbacks.onEventChange(dateStr, timeSlot, newText)
+                callbacks.onEventChange(dateStr, timeSlot, newText, newColorType)
               }
             }
           )
@@ -302,7 +337,7 @@ export const WeekGrid = {
           e.preventDefault()
           cell.classList.remove('drag-over')
           if (!_dragState) return
-          const { date: srcDate, timeSlot: srcSlot, index: srcIdx, text } = _dragState
+          const { date: srcDate, timeSlot: srcSlot, index: srcIdx, text, colorType = 0 } = _dragState
           _dragState = null
           if (srcDate === dateStr && srcSlot === timeSlot) return
 
@@ -322,7 +357,7 @@ export const WeekGrid = {
 
           // 添加到目标格
           const newIdx = existingBlocks.length // 0 或 1
-          const block = _makeEventBlock(text, newIdx, cell, dateStr, timeSlot, callbacks)
+          const block = _makeEventBlock({ text, colorType }, newIdx, cell, dateStr, timeSlot, callbacks)
           cell.appendChild(block)
           cell.classList.add('has-event')
           if (newIdx === 1) cell.classList.add('multi-event')
@@ -330,9 +365,9 @@ export const WeekGrid = {
           // 数据持久化
           callbacks.onEventItemClear(srcDate, srcSlot, srcIdx)
           if (newIdx === 0) {
-            callbacks.onEventChange(dateStr, timeSlot, text)
+            callbacks.onEventChange(dateStr, timeSlot, text, colorType)
           } else {
-            callbacks.onEventAdd(dateStr, timeSlot, text)
+            callbacks.onEventAdd(dateStr, timeSlot, text, colorType)
           }
         })
 
@@ -367,6 +402,14 @@ export const WeekGrid = {
   }
 }
 
+// ── 根据 colorType 应用颜色类 ────────────────────────────────────────────────
+function _applyColorClass(el, colorType) {
+  el.classList.remove('bg-blue', 'bg-red', 'bg-green')
+  if (colorType === 1) el.classList.add('bg-red')
+  else if (colorType === 2) el.classList.add('bg-green')
+  else el.classList.add('bg-blue')
+}
+
 // ── 根据前缀自动分类（!重要  @个人）────────────────────────────────────────────
 function _applyCategoryClass(el, text) {
   el.classList.remove('event-important', 'event-personal')
@@ -378,14 +421,19 @@ function _applyCategoryClass(el, text) {
 }
 
 // ── 创建事件 block ─────────────────────────────────────────────────────────────
-function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
+function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
+  const text = typeof item === 'string' ? item : (item.text || '')
+  const colorType = typeof item === 'object' ? (item.colorType ?? 0) : 0
+
   const block = document.createElement('div')
   block.className = 'event-block'
   block.textContent = text
   block.title = text
   block.draggable = true
   block.dataset.index = idx
+  block.dataset.colorType = colorType
   _applyCategoryClass(block, text)
+  _applyColorClass(block, colorType)
 
   // 点击 block → 编辑该事件
   block.addEventListener('click', (e) => {
@@ -393,13 +441,16 @@ function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
     FloatingEditor.open(
       cell,
       block.textContent.trim(),
-      (newText) => {
+      parseInt(block.dataset.colorType) || 0,
+      (newText, newColorType) => {
         const currentIdx = parseInt(block.dataset.index)
         if (newText) {
           block.textContent = newText
           block.title = newText
+          block.dataset.colorType = newColorType
           _applyCategoryClass(block, newText)
-          callbacks.onEventItemChange(dateStr, timeSlot, currentIdx, newText)
+          _applyColorClass(block, newColorType)
+          callbacks.onEventItemChange(dateStr, timeSlot, currentIdx, newText, newColorType)
         } else {
           _removeBlock(block, cell)
           callbacks.onEventItemClear(dateStr, timeSlot, currentIdx)
@@ -420,7 +471,8 @@ function _makeEventBlock(text, idx, cell, dateStr, timeSlot, callbacks) {
       date: dateStr,
       timeSlot,
       index: parseInt(block.dataset.index),
-      text: block.textContent.trim()
+      text: block.textContent.trim(),
+      colorType: parseInt(block.dataset.colorType) || 0
     }
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', _dragState.text)

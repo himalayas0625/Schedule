@@ -92,17 +92,17 @@ async function init() {
           }
         })
       },
-      onEventChange(dateStr, timeSlot, text) {
-        dm.setEvent(weekKey, dateStr, timeSlot, text)
+      onEventChange(dateStr, timeSlot, text, colorType = 0) {
+        dm.setEvent(weekKey, dateStr, timeSlot, text, colorType)
       },
       onEventClear(dateStr, timeSlot) {
         dm.clearEvent(weekKey, dateStr, timeSlot)
       },
-      onEventAdd(dateStr, timeSlot, text) {
-        dm.addEvent(weekKey, dateStr, timeSlot, text)
+      onEventAdd(dateStr, timeSlot, text, colorType = 0) {
+        dm.addEvent(weekKey, dateStr, timeSlot, text, colorType)
       },
-      onEventItemChange(dateStr, timeSlot, index, text) {
-        dm.setEventItem(weekKey, dateStr, timeSlot, text, index)
+      onEventItemChange(dateStr, timeSlot, index, text, colorType = 0) {
+        dm.setEventItem(weekKey, dateStr, timeSlot, text, index, colorType)
       },
       onEventItemClear(dateStr, timeSlot, index) {
         dm.clearEventItem(weekKey, dateStr, timeSlot, index)
