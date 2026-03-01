@@ -36,16 +36,16 @@
 /* 亮色主题 —— Warm Modern */
 [data-theme="light"] {
   /* 背景分层：网格区暖杏米 / 侧边栏纯白 */
-  --bg-primary:    #F2EAE0;
+  --bg-primary:    #F4EDE6;
   --bg-secondary:  #ffffff;
-  --bg-cell-hover: #EAE0D5;
-  --bg-event:      #C8DFF5;
+  --bg-cell-hover: #EDE5DC;
+  --bg-event:      #D0E6F5;
   /* 文字三层级（暖棕调） */
-  --text-primary:  #2C2416;
-  --text-muted:    #7A6E65;
-  --text-aux:      #C0B4A8;
+  --text-primary:  #2E2820;
+  --text-muted:    #7C726A;
+  --text-aux:      #C2B8AE;
   /* 边框 & 阴影（暖棕，去冷蓝） */
-  --border:        #CEC4B8;
+  --border:        #D2C8BC;
   --shadow:        0 12px 40px rgba(100, 75, 50, 0.14), 0 2px 8px rgba(100, 75, 50, 0.08);
   /* 品牌色：爱马仕橙 */
   --today-accent:  #FF9500;

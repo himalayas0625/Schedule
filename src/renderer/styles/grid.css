@@ -141,7 +141,7 @@
 /* 亮色主题：时间标签融入暖色背景，不显白色面板 */
 [data-theme="light"] .time-label {
   background: transparent;
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 /* ── 单元格 ───────────────────────────────────────── */
@@ -167,7 +167,7 @@
 }
 
 [data-theme="light"] .grid-cell.on-hour {
-  border-top: 1px dashed rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .grid-cell:last-child { border-right: none; }
@@ -230,39 +230,42 @@
 
 /* ── 亮色主题竖线分隔 ─────────────────────────────── */
 [data-theme="light"] .grid-cell {
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .col-header {
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .time-label {
-  border-right: 1px solid rgba(0, 0, 0, 0.07);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* ── 亮色主题覆盖 ─────────────────────────────────── */
 
-/* 事件块：普通日程（浅蓝底 + 靛蓝字），无 border-left */
+/* 事件块：普通日程（浅蓝底 + 靛蓝字 + 左标识线） */
 [data-theme="light"] .grid-cell.has-event {
   background: var(--bg-event);
   color: var(--event-text);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
   font-weight: 500;
   padding: 4px 10px;
+  border-left: 3px solid var(--event-border);
 }
 
-/* 重要任务（!前缀）：浅红底 + 深红字 */
+/* 重要任务（!前缀）：浅红底 + 深红字 + 红色标识线 */
 [data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.event-important) {
   background: var(--event-bg-important);
   color: var(--event-text-important);
+  border-left: 3px solid var(--event-text-important);
 }
 
-/* 个人生活（@前缀）：浅紫底 + 紫字 */
+/* 个人生活（@前缀）：浅紫底 + 紫字 + 紫色标识线 */
 [data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.event-personal) {
   background: var(--event-bg-personal);
   color: var(--event-text-personal);
+  border-left: 3px solid var(--event-text-personal);
 }
 
 /* 并列模式：cell 透明，各 block 独立展示 */
@@ -311,7 +314,7 @@
   min-width: 0;
   background: var(--bg-event);
   color: var(--accent);
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 2px 6px;
   font-size: 10px;
   font-weight: 500;
@@ -327,16 +330,19 @@
   background: var(--bg-event);
   color: var(--event-text);
   box-shadow: 0 1px 2px rgba(44, 62, 80, 0.10);
+  border-left: 3px solid var(--event-border);
 }
 
 [data-theme="light"] .grid-cell.multi-event .event-block.event-important {
   background: var(--event-bg-important);
   color: var(--event-text-important);
+  border-left: 3px solid var(--event-text-important);
 }
 
 [data-theme="light"] .grid-cell.multi-event .event-block.event-personal {
   background: var(--event-bg-personal);
   color: var(--event-text-personal);
+  border-left: 3px solid var(--event-text-personal);
 }
 
 .event-block.dragging {

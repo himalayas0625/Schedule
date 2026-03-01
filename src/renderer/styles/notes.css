@@ -85,10 +85,10 @@
 /* 亮色：悬浮白卡基底 */
 [data-theme="light"] .note-item {
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 14px 16px;
   box-shadow: 0 8px 30px rgba(140, 115, 85, 0.10);
-  border: none;
+  border: 1px solid rgba(140, 115, 85, 0.08);
 }
 
 [data-theme="light"] .note-item:hover {
@@ -96,20 +96,20 @@
   transform: translateY(-2px);
 }
 
-/* 55%：饱和度提升，色调更鲜明 */
+/* 莫兰迪 35%：白卡上叠加淡色调 */
 [data-theme="light"] #notes-panel .note-item:nth-child(1),
 [data-theme="light"] #notes-panel .note-item:nth-child(2) {
-  background: rgba(180, 220, 248, 0.55);
+  background: rgba(180, 220, 248, 0.35);
 }
 [data-theme="light"] #notes-panel .note-item:nth-child(3) {
-  background: rgba(248, 205, 188, 0.55);
+  background: rgba(248, 205, 188, 0.35);
 }
 [data-theme="light"] #right-panel .note-item:nth-child(1) {
-  background: rgba(252, 215, 185, 0.55);
+  background: rgba(252, 215, 185, 0.35);
 }
 [data-theme="light"] #right-panel .note-item:nth-child(2),
 [data-theme="light"] #right-panel .note-item:nth-child(3) {
-  background: rgba(180, 220, 248, 0.55);
+  background: rgba(180, 220, 248, 0.35);
 }
 
 .note-num {
@@ -161,7 +161,9 @@
   background: transparent;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 1.5;
   padding: 4px 2px;
   outline: none;
