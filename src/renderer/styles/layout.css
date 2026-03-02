@@ -141,14 +141,10 @@
   color: #1a1a1a;
 }
 
-/* Light 模式下拖拽手柄样式 */
-[data-theme="light"] #sidebar-resizer,
-[data-theme="light"] #right-resizer {
-  background: transparent;
-}
+/* Light 模式下拖拽手柄悬停样式 */
 [data-theme="light"] #sidebar-resizer:hover,
 [data-theme="light"] #right-resizer:hover {
-  background: rgba(140, 115, 85, 0.25);
+  background: var(--grid-line-color);
 }
 
 /* ── 主内容区（撑满全屏，标题栏浮动其上） ──────── */
@@ -173,8 +169,8 @@
   margin-top: calc(var(--system-bar-height) + 4px);
   margin-bottom: var(--breathing-gap);
   margin-left: 10px;
-  margin-right: 10px;
-  border-radius: var(--card-radius);
+  margin-right: 10px;  /* 恢复右侧 margin，与左侧对称 */
+  border-radius: var(--card-radius);  /* 四个角都有圆角 */
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
 }
 
@@ -211,8 +207,8 @@
   margin-top: calc(var(--system-bar-height) + 4px);
   margin-bottom: var(--breathing-gap);
   margin-right: 10px;
-  margin-left: 10px;
-  border-radius: var(--card-radius);
+  margin-left: 10px;  /* 恢复左侧 margin，与右侧对称 */
+  border-radius: var(--card-radius);  /* 四个角都有圆角 */
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
 }
 
@@ -228,7 +224,7 @@
   position: relative;
   width: 1px;
   flex-shrink: 0;
-  background: rgba(128, 128, 128, 0.35);
+  background: transparent;  /* 默认透明 */
   -webkit-app-region: no-drag;
   z-index: 100;
   transition: width 0.15s ease, background-color 0.2s ease;
@@ -250,11 +246,12 @@
 }
 
 #right-resizer:hover {
-  background: rgba(128, 128, 128, 0.55);
+  background: var(--grid-line-color);
 }
 
 #right-resizer.dragging {
   width: 2px;
+  background: var(--grid-line-color);
 }
 
 /* ── 缩放手柄 ─────────────────────────────────────── */

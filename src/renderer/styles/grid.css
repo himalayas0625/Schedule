@@ -3,18 +3,26 @@
   display: grid;
   grid-template-columns: var(--time-label-width) repeat(7, 1fr);
   background: var(--bg-primary);
+  /* 顶部和左右边框，形成闭合边界 */
+  border-top: 1px solid var(--grid-line-color);
+  border-left: 1px solid var(--grid-line-color);
+  border-right: 1px solid var(--grid-line-color);
   border-bottom: 1px solid var(--grid-line-color);
+  /* 顶部圆角 */
+  border-top-left-radius: var(--card-radius);
+  border-top-right-radius: var(--card-radius);
   flex-shrink: 0;
   position: relative;
   z-index: 10; /* 提高 z-index 确保 Dark/Light 模式下内容不会穿透 */
   overflow: hidden;
   scrollbar-gutter: stable;
+  /* 移除 padding-top，让内部竖线能延伸到顶部边框 */
 }
 
 .col-header {
-  padding: 6px 4px;
+  padding: 8px 4px 6px 4px;  /* 顶部 8px 呼吸空间，底部 6px */
   text-align: center;
-  border-right: none;
+  border-right: 1px solid var(--grid-line-color);  /* 与网格竖线一致 */
   cursor: pointer;
   transition: background var(--transition);
   display: flex;
@@ -22,9 +30,27 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
+  position: relative;  /* 为伪元素定位 */
 }
 
-.col-header:last-child { border-right: none; }
+/* 竖线延伸到顶部边框（使用伪元素绕过圆角裁剪） */
+.col-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 8px;  /* 延伸到 padding 区域顶部 */
+  background: var(--grid-line-color);
+  pointer-events: none;
+}
+
+.col-header:last-child {
+  border-right: none;
+}
+.col-header:last-child::before {
+  display: none;  /* 最后一列不显示竖线 */
+}
 .col-header:hover { background: var(--bg-cell-hover); }
 
 .col-header.selected {
@@ -101,6 +127,20 @@
   font-size: 10px;
   color: var(--text-muted);
   padding: 4px;
+  border-right: 1px solid var(--grid-line-color);  /* 与列标题竖线一致 */
+  position: relative;
+}
+
+/* 竖线延伸到顶部边框 */
+.time-gutter-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 4px;  /* 延伸到 padding 区域顶部 */
+  background: var(--grid-line-color);
+  pointer-events: none;
 }
 
 /* ── 网格体：扁平 CSS Grid ────────────────────────── */
@@ -114,6 +154,13 @@
   grid-template-columns: var(--time-label-width) repeat(7, 1fr);
   grid-template-rows: repeat(48, var(--cell-height));
   align-content: start;
+  /* 左右边框和底部边框，与表头形成闭合边界 */
+  border-left: 1px solid var(--grid-line-color);
+  border-right: 1px solid var(--grid-line-color);
+  border-bottom: 1px solid var(--grid-line-color);
+  /* 底部圆角 */
+  border-bottom-left-radius: var(--card-radius);
+  border-bottom-right-radius: var(--card-radius);
 }
 
 /* 时间标签：整点渲染，跨 2 行，文字垂直居中 */
@@ -121,7 +168,7 @@
   font-size: 10px;
   color: var(--text-muted);
   background: var(--bg-secondary);
-  border-right: none;
+  border-right: 1px solid var(--grid-line-color);  /* 与网格竖线一致 */
   position: sticky;
   left: 0;
   z-index: 5; /* 确保 sticky 元素在正确的层级 */
@@ -146,7 +193,7 @@
 /* ── 单元格 ───────────────────────────────────────── */
 .grid-cell {
   padding: 2px 5px;
-  border-right: none;
+  border-right: 1px solid var(--grid-line-color);  /* 竖线分隔 */
   border-bottom: none;
   cursor: pointer;
   font-size: 11px;
@@ -221,19 +268,6 @@
 :root .grid-cell.multi-event .event-block.event-personal {
   background: var(--event-bg-personal);
   color: var(--event-text-personal);
-}
-
-/* ── 竖线分隔（使用网格线变量）────────────────────────────── */
-.grid-cell {
-  border-right: 1px solid var(--grid-line-color);
-}
-
-.col-header {
-  border-right: 1px solid var(--grid-line-color);
-}
-
-.time-label {
-  border-right: 1px solid var(--grid-line-color);
 }
 
 /* ── 亮色主题覆盖 ─────────────────────────────────── */
@@ -425,7 +459,7 @@
   position: relative;
   width: 1px;
   flex-shrink: 0;
-  background: rgba(128, 128, 128, 0.35);
+  background: transparent;  /* 默认透明，利用渐变边框实现自然过渡 */
   -webkit-app-region: no-drag;
   z-index: 100;
   transition: width 0.15s ease, background-color 0.2s ease;
@@ -447,14 +481,15 @@
   cursor: col-resize;
 }
 
-/* 悬停时稍微加深 */
+/* 悬停时显示线条 */
 #sidebar-resizer:hover {
-  background: rgba(128, 128, 128, 0.55);
+  background: var(--grid-line-color);
 }
 
 /* 拖拽中：线条加粗 */
 #sidebar-resizer.dragging {
   width: 2px;
+  background: var(--grid-line-color);
 }
 
 /* ── 颜色类型（colorType: 0→.bg-blue, 1→.bg-red, 2→.bg-green）────── */
