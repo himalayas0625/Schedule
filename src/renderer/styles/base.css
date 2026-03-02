@@ -5,6 +5,7 @@
   --breathing-gap: 28px;           /* 呼吸区高度，用于网格顶部与 header 之间的间距 */
   --card-padding: 16px;            /* 卡片内边距 */
   --card-radius: 12px;             /* 卡片圆角 */
+  --window-radius: 14px;           /* 窗口圆角（略大于卡片圆角） */
   --sidebar-top-offset: 44px;      /* 侧边栏顶部偏移（从系统栏底部开始） */
 
   /* ── 原有变量 ──────────────────────────────────────── */
@@ -34,6 +35,8 @@
   --text-aux:      #3e3e52;
   --border:        #2e2e3e;
   --shadow:        0 12px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  /* 窗口弥散阴影（Dark 模式更强烈） */
+  --window-shadow: 0 10px 50px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
   /* 暗色网格线：极低不透明度的白色 */
   --grid-line-color:       rgba(255, 255, 255, 0.03);
   --grid-line-horizontal:  rgba(255, 255, 255, 0.02);
@@ -59,6 +62,8 @@
   /* 边框 & 阴影（暖棕，去冷蓝） */
   --border:        #D2C8BC;
   --shadow:        0 12px 40px rgba(100, 75, 50, 0.14), 0 2px 8px rgba(100, 75, 50, 0.08);
+  /* 窗口弥散阴影（Light 模式更柔和） */
+  --window-shadow: 0 10px 50px rgba(100, 75, 50, 0.18), 0 2px 10px rgba(100, 75, 50, 0.10);
   /* 亮色网格线：低不透明度的黑色 */
   --grid-line-color:       rgba(0, 0, 0, 0.05);
   --grid-line-horizontal:  rgba(0, 0, 0, 0.04);
@@ -106,9 +111,10 @@ body {
   font-size: 13px;
   color: var(--text-primary);
   background: var(--bg-primary);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  /* Windows 10 圆角：使用 clip-path 裁剪窗口 */
+  clip-path: inset(0 round var(--window-radius));
+  /* 弥散阴影：使用变量实现 Dark/Light 模式差异化 */
+  box-shadow: var(--window-shadow);
   user-select: none;
   -webkit-user-select: none;
 }
