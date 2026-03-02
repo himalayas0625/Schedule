@@ -2,6 +2,7 @@
   "name": "screen-schedule",
   "version": "1.0.0",
   "description": "Desktop floating week schedule overlay",
+  "author": "screen-schedule",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",

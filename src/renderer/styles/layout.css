@@ -141,11 +141,10 @@
   color: #1a1a1a;
 }
 
+/* Light 模式下拖拽手柄样式 */
 [data-theme="light"] #sidebar-resizer,
 [data-theme="light"] #right-resizer {
   background: transparent;
-  margin-top: calc(var(--system-bar-height) + 4px);
-  margin-bottom: 28px;
 }
 [data-theme="light"] #sidebar-resizer:hover,
 [data-theme="light"] #right-resizer:hover {
@@ -164,24 +163,25 @@
 #notes-panel {
   width: var(--notes-width);
   flex-shrink: 0;
-  border-right: 1px solid var(--border);
+  border-right: none;
   background: var(--bg-secondary);
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  /* Dark 模式也使用与 Light 模式一致的侧边栏偏移 */
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: var(--breathing-gap);
+  margin-left: 10px;
+  margin-right: 10px;
+  border-radius: var(--card-radius);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
 }
 
 [data-theme="light"] #notes-panel {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: none;
-  border-radius: 12px;
-  margin-top: calc(var(--system-bar-height) + 4px);
-  margin-bottom: 28px;
-  margin-left: 10px;
-  margin-right: 10px;
   box-shadow: 0 8px 30px rgba(140, 115, 85, 0.12), 0 2px 8px rgba(140, 115, 85, 0.06);
 }
 
@@ -192,7 +192,8 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
-  padding-top: calc(var(--title-bar-height) + 28px);
+  /* 使用全局变量确保 Dark/Light 模式一致的呼吸区 */
+  padding-top: calc(var(--title-bar-height) + var(--breathing-gap));
   background: var(--bg-primary);
 }
 
@@ -206,18 +207,19 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  /* Dark 模式也使用与 Light 模式一致的侧边栏偏移 */
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: var(--breathing-gap);
+  margin-right: 10px;
+  margin-left: 10px;
+  border-radius: var(--card-radius);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
 }
 
 [data-theme="light"] #right-panel {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-left: none;
-  border-radius: 12px;
-  margin-top: calc(var(--system-bar-height) + 4px);
-  margin-bottom: 28px;
-  margin-right: 10px;
-  margin-left: 10px;
   box-shadow: 0 8px 30px rgba(140, 115, 85, 0.12), 0 2px 8px rgba(140, 115, 85, 0.06);
 }
 
@@ -230,6 +232,9 @@
   -webkit-app-region: no-drag;
   z-index: 100;
   transition: width 0.15s ease, background-color 0.2s ease;
+  /* Dark 模式也使用与 Light 模式一致的偏移 */
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: var(--breathing-gap);
 }
 
 #right-resizer::after {

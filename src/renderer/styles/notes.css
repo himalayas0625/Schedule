@@ -7,8 +7,9 @@
 }
 
 .notes-date-header {
-  /* margin-top "挂"到 32px（系统栏底部）：浮于侧边栏材质之上，导航栏透明浮于中间 */
-  margin-top: calc(var(--system-bar-height) + 10px);
+  /* 侧边栏已经有 margin-top，这里只需要相对于侧边栏顶部的内边距 */
+  /* 侧边栏从 system-bar 底部开始，标题需要留出呼吸空间 */
+  margin-top: 10px;
   padding: 0 16px;
   display: flex;
   flex-direction: column;
@@ -71,21 +72,38 @@
   align-items: flex-start;
   gap: 10px;
   transition: box-shadow 0.22s ease, transform 0.22s ease;
+  /* 统一卡片规格：使用全局变量 */
+  padding: var(--card-padding);
+  border-radius: var(--card-radius);
 }
 
-/* 暗色卡片 */
-[data-theme="dark"] .note-item,
-:root .note-item {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  padding: 10px 12px;
+/* 暗色卡片：添加与 Light 模式类似的背景色区分 */
+[data-theme="dark"] .note-item:nth-child(1),
+:root .note-item:nth-child(1) {
+  background: rgba(74, 144, 217, 0.12);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .note-item:nth-child(2),
+:root .note-item:nth-child(2) {
+  background: rgba(138, 154, 115, 0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .note-item:nth-child(3),
+:root .note-item:nth-child(3) {
+  background: rgba(188, 126, 121, 0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* Dark 模式 hover 效果 */
+[data-theme="dark"] .note-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
 }
 
 /* 亮色：莫兰迪三色卡片 */
 [data-theme="light"] .note-item {
-  border-radius: 10px;
-  padding: 14px 16px;
   box-shadow: 0 8px 30px rgba(140, 115, 85, 0.10);
   border: 1px solid rgba(140, 115, 85, 0.08);
 }

@@ -1,5 +1,13 @@
 /* ── CSS 变量 & 主题 ─────────────────────────────── */
 :root {
+  /* ── 布局变量（所有主题共用，禁止在主题类中修改）──────── */
+  --header-height: 44px;           /* Header 高度（system-bar + toolbar = 76px，但侧边栏顶部偏移为 44px） */
+  --breathing-gap: 28px;           /* 呼吸区高度，用于网格顶部与 header 之间的间距 */
+  --card-padding: 16px;            /* 卡片内边距 */
+  --card-radius: 12px;             /* 卡片圆角 */
+  --sidebar-top-offset: 44px;      /* 侧边栏顶部偏移（从系统栏底部开始） */
+
+  /* ── 原有变量 ──────────────────────────────────────── */
   --accent: #4A90D9;
   --accent-rgb: 74, 144, 217;
   --today-accent: #FF9500;

@@ -2,18 +2,17 @@
 #grid-header {
   display: grid;
   grid-template-columns: var(--time-label-width) repeat(7, 1fr);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   position: relative;
-  z-index: 2;
+  z-index: 10; /* 提高 z-index 确保 Dark/Light 模式下内容不会穿透 */
   overflow: hidden;
   scrollbar-gutter: stable;
 }
 
 /* 亮色：表头底色与网格体统一，整个中心区呈米灰一体 */
 [data-theme="light"] #grid-header {
-  background: var(--bg-primary);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -130,7 +129,7 @@
   border-right: none;
   position: sticky;
   left: 0;
-  z-index: 1;
+  z-index: 5; /* 确保 sticky 元素在正确的层级 */
   user-select: none;
   display: flex;
   align-items: center;
@@ -142,6 +141,11 @@
 [data-theme="light"] .time-label {
   background: transparent;
   opacity: 0.85;
+}
+
+/* 暗色主题：确保时间标签有正确的背景色，防止滚动时内容穿透 */
+[data-theme="dark"] .time-label {
+  background: var(--bg-secondary);
 }
 
 /* ── 单元格 ───────────────────────────────────────── */
@@ -434,6 +438,9 @@
   -webkit-app-region: no-drag;
   z-index: 100;
   transition: width 0.15s ease, background-color 0.2s ease;
+  /* Dark 模式也使用与 Light 模式一致的偏移 */
+  margin-top: calc(var(--system-bar-height) + 4px);
+  margin-bottom: var(--breathing-gap);
 }
 
 /* 隐形点击区：10px 透明区域，居中于 1px 实体线 */
