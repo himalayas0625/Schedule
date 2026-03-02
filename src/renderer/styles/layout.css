@@ -190,6 +190,9 @@
   min-width: 0;
   /* 使用全局变量确保 Dark/Light 模式一致的呼吸区 */
   padding-top: calc(var(--title-bar-height) + var(--breathing-gap));
+  padding-bottom: var(--breathing-gap);  /* 底部呼吸空间，与顶部对称 */
+  padding-left: 10px;   /* 左侧呼吸空间 */
+  padding-right: 10px;  /* 右侧呼吸空间 */
   background: var(--bg-primary);
 }
 
