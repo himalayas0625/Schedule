@@ -201,7 +201,7 @@
 #right-panel {
   width: var(--notes-width);
   flex-shrink: 0;
-  border-left: 1px solid var(--border);
+  border-left: none;  /* 移除边框，利用色块对比形成自然边界 */
   background: var(--bg-secondary);
   overflow-y: auto;
   overflow-x: hidden;

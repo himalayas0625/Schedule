@@ -3,17 +3,12 @@
   display: grid;
   grid-template-columns: var(--time-label-width) repeat(7, 1fr);
   background: var(--bg-primary);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--grid-line-color);
   flex-shrink: 0;
   position: relative;
   z-index: 10; /* 提高 z-index 确保 Dark/Light 模式下内容不会穿透 */
   overflow: hidden;
   scrollbar-gutter: stable;
-}
-
-/* 亮色：表头底色与网格体统一，整个中心区呈米灰一体 */
-[data-theme="light"] #grid-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .col-header {
@@ -165,13 +160,9 @@
   color: var(--text-muted);
 }
 
-/* 整点行：极浅虚线作为小时分隔 */
+/* 整点行：使用网格线变量作为小时分隔 */
 .grid-cell.on-hour {
-  border-top: 1px dashed rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] .grid-cell.on-hour {
-  border-top: 1px solid rgba(0, 0, 0, 0.03);
+  border-top: 1px solid var(--grid-line-horizontal);
 }
 
 .grid-cell:last-child { border-right: none; }
@@ -232,17 +223,17 @@
   color: var(--event-text-personal);
 }
 
-/* ── 亮色主题竖线分隔 ─────────────────────────────── */
-[data-theme="light"] .grid-cell {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+/* ── 竖线分隔（使用网格线变量）────────────────────────────── */
+.grid-cell {
+  border-right: 1px solid var(--grid-line-color);
 }
 
-[data-theme="light"] .col-header {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+.col-header {
+  border-right: 1px solid var(--grid-line-color);
 }
 
-[data-theme="light"] .time-label {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+.time-label {
+  border-right: 1px solid var(--grid-line-color);
 }
 
 /* ── 亮色主题覆盖 ─────────────────────────────────── */

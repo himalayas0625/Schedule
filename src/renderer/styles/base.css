@@ -34,6 +34,10 @@
   --text-aux:      #3e3e52;
   --border:        #2e2e3e;
   --shadow:        0 12px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  /* 暗色网格线：极低不透明度的白色 */
+  --grid-line-color:       rgba(255, 255, 255, 0.03);
+  --grid-line-horizontal:  rgba(255, 255, 255, 0.02);
+  --grid-line-border:      transparent;
   /* 暗色任务分类 */
   --event-bg-important:   rgba(192, 57, 43, 0.22);
   --event-text-important: #F1948A;
@@ -55,6 +59,10 @@
   /* 边框 & 阴影（暖棕，去冷蓝） */
   --border:        #D2C8BC;
   --shadow:        0 12px 40px rgba(100, 75, 50, 0.14), 0 2px 8px rgba(100, 75, 50, 0.08);
+  /* 亮色网格线：低不透明度的黑色 */
+  --grid-line-color:       rgba(0, 0, 0, 0.05);
+  --grid-line-horizontal:  rgba(0, 0, 0, 0.04);
+  --grid-line-border:      rgba(0, 0, 0, 0.06);
   /* 品牌色：爱马仕橙 */
   --today-accent:  #FF9500;
   /* 普通日程（饱和蓝） */
