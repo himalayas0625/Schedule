@@ -388,6 +388,86 @@ export const WeekGrid = {
     body.scrollTop = lineTop - body.clientHeight / 2 + CELL_HEIGHT
   },
 
+  // ── 月视图渲染入口 ────────────────────────────────────
+  renderMonth(calendarDates, eventsMap, year, month, selectedDate, startOfWeek, callbacks) {
+    clearInterval(redLineTimer)
+    currentRedLineEl = null
+    this._renderMonthHeader(startOfWeek)
+    this._renderMonthBody(calendarDates, eventsMap, year, month, selectedDate, callbacks)
+  },
+
+  _renderMonthHeader(startOfWeek = 1) {
+    const header = document.getElementById('grid-header')
+    header.innerHTML = ''
+    const ALL_DAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    for (let i = 0; i < 7; i++) {
+      const col = document.createElement('div')
+      col.className = 'col-header month-col-header'
+      col.textContent = ALL_DAYS[(startOfWeek + i) % 7]
+      header.appendChild(col)
+    }
+  },
+
+  _renderMonthBody(calendarDates, eventsMap, year, month, selectedDate, callbacks) {
+    const body = document.getElementById('grid-body')
+    body.innerHTML = ''
+    const today = getTodayStr()
+
+    calendarDates.forEach(dateStr => {
+      const d = new Date(dateStr + 'T12:00:00')
+      const isCurrentMonth = d.getFullYear() === year && (d.getMonth() + 1) === month
+      const isToday = dateStr === today
+      const isSelected = dateStr === selectedDate
+
+      const cell = document.createElement('div')
+      cell.className = 'month-day-cell'
+      if (!isCurrentMonth) cell.classList.add('other-month')
+      if (isToday) cell.classList.add('today')
+      if (isSelected) cell.classList.add('selected')
+
+      // 日期数字
+      const dayNum = document.createElement('div')
+      dayNum.className = 'month-day-num'
+      dayNum.textContent = d.getDate()
+      cell.appendChild(dayNum)
+
+      // 事件小条（最多显示 3 条）
+      const dayEvents = eventsMap[dateStr] ?? {}
+      const slots = Object.keys(dayEvents).sort()
+      let chipCount = 0
+      let totalCount = 0
+
+      for (const slot of slots) {
+        const raw = dayEvents[slot]
+        const items = Array.isArray(raw) ? raw : (raw ? [raw] : [])
+        totalCount += items.length
+        for (const item of items) {
+          if (chipCount >= 3) continue
+          const text = typeof item === 'string' ? item : (item.text || '')
+          if (!text) { totalCount--; continue }
+          const colorType = typeof item === 'object' ? (item.colorType ?? 0) : 0
+          const chip = document.createElement('div')
+          chip.className = 'month-event-chip'
+          chip.textContent = text
+          chip.title = `${slot} ${text}`
+          _applyColorClass(chip, colorType)
+          cell.appendChild(chip)
+          chipCount++
+        }
+      }
+
+      if (totalCount > 3) {
+        const more = document.createElement('div')
+        more.className = 'month-more'
+        more.textContent = `+${totalCount - 3} 项`
+        cell.appendChild(more)
+      }
+
+      cell.addEventListener('click', () => callbacks.onSelectDate(dateStr))
+      body.appendChild(cell)
+    })
+  },
+
   // 更新选中列（不重建整个 DOM）
   updateSelectedCol(oldDate, newDate) {
     document.querySelectorAll('.grid-cell.selected-col').forEach(el => {

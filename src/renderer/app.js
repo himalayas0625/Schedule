@@ -54,6 +54,26 @@ function formatWeekLabel(weekDates) {
   return `${first.getMonth() + 1}月${first.getDate()}–${last.getDate()}日 ${first.getFullYear()}`
 }
 
+// 格式化日标签（日视图标题栏）
+function formatDayLabel(dateStr) {
+  const DAY = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const d = new Date(dateStr + 'T12:00:00')
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${DAY[d.getDay()]}`
+}
+
+// 获取月视图日历网格（6×7 = 42 天，startOfWeek 对齐周一/周日）
+function getMonthCalendarDates(year, month, startOfWeek = 1) {
+  const firstDay = new Date(year, month - 1, 1)
+  const daysBack = (firstDay.getDay() - startOfWeek + 7) % 7
+  const gridStart = new Date(firstDay)
+  gridStart.setDate(firstDay.getDate() - daysBack)
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(gridStart)
+    d.setDate(gridStart.getDate() + i)
+    return toLocalDateStr(d)
+  })
+}
+
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
 async function init() {
   const dm = new DataManager()
@@ -62,55 +82,113 @@ async function init() {
   const today = toLocalDateStr(new Date())
   let currentOffset = 0                     // 0 = 本周
   let selectedDate = today                  // 当前选中列
+  let currentView = 'week'                 // 'week' | 'day' | 'month'
+  let monthOffset = 0                      // 0 = 本月，-1 = 上月，+1 = 下月
 
   WeekGrid.init()
 
   // ── 渲染函数 ────────────────────────────────────────
   function render() {
+    // ── 月视图单独分支（早返回）──────────────────────
+    if (currentView === 'month') {
+      const now = new Date()
+      const target = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
+      const year = target.getFullYear()
+      const month = target.getMonth() + 1
+      const startOfWeek = dm.settings.startOfWeek ?? 1
+      const calendarDates = getMonthCalendarDates(year, month, startOfWeek)
+
+      // 聚合当月日历格内所有日期的事件
+      const eventsMap = {}
+      calendarDates.forEach(dateStr => {
+        const wk = getISOWeekKey(new Date(dateStr + 'T12:00:00'))
+        eventsMap[dateStr] = dm.getWeekData(wk).events?.[dateStr] ?? {}
+      })
+
+      const grid = document.getElementById('schedule-grid')
+      grid.classList.remove('day-view')
+      grid.classList.add('month-view')
+      document.getElementById('btn-week-label').textContent = `${year}年${month}月`
+
+      WeekGrid.renderMonth(calendarDates, eventsMap, year, month, selectedDate, startOfWeek, {
+        onSelectDate(dateStr) {
+          selectedDate = dateStr
+          currentView = 'day'
+          document.querySelectorAll('.pill-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.view === 'day')
+          })
+          render()
+        }
+      })
+
+      const notesKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'))
+      NotesPanel.render(dm.getNotes(notesKey, selectedDate), selectedDate, {
+        onChange(date, idx, val) { dm.setNote(notesKey, date, idx, val) }
+      })
+      const dataKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'))
+      RightPanel.render(dm.getWeekNotes(dataKey), `${year}年${month}月`, {
+        onChange(idx, val) { dm.setWeekNote(dataKey, idx, val) }
+      })
+      return
+    }
+
+    // ── 周 / 日视图 ──────────────────────────────────
     const weekDates = getWeekDates(currentOffset, dm.settings.startOfWeek ?? 0)
     const weekKey = getISOWeekKey(new Date(weekDates[0] + 'T12:00:00'))
-    const weekData = dm.getWeekData(weekKey)
 
-    // 若选中日期不在本周视图内，保持不变（允许跨周浏览时笔记仍显示已选日期）
-    // 若是跳回本周，重置到今天
     if (currentOffset === 0 && !weekDates.includes(selectedDate)) {
       selectedDate = today
     }
 
-    // 更新周范围标签
-    document.getElementById('btn-week-label').textContent = formatWeekLabel(weekDates)
+    // 日视图时用 selectedDate 所在周的数据键
+    const dataWeekKey = currentView === 'day'
+      ? getISOWeekKey(new Date(selectedDate + 'T12:00:00'))
+      : weekKey
+    const weekData = dm.getWeekData(dataWeekKey)
+
+    // 日视图只传单日，周视图传全周
+    const displayDates = currentView === 'day' ? [selectedDate] : weekDates
+
+    // 切换视图 CSS 类
+    document.getElementById('schedule-grid').classList.remove('month-view')
+    document.getElementById('schedule-grid').classList.toggle('day-view', currentView === 'day')
+
+    // 更新标题栏标签
+    document.getElementById('btn-week-label').textContent = currentView === 'day'
+      ? formatDayLabel(selectedDate)
+      : formatWeekLabel(weekDates)
 
     // 渲染网格
-    WeekGrid.render(weekDates, weekData.events, selectedDate, {
+    WeekGrid.render(displayDates, weekData.events, selectedDate, {
       onSelectDate(dateStr) {
         const prevDate = selectedDate
         selectedDate = dateStr
-        WeekGrid.updateSelectedCol(prevDate, dateStr)
-        NotesPanel.render(dm.getNotes(weekKey, dateStr), dateStr, {
+        if (currentView === 'week') WeekGrid.updateSelectedCol(prevDate, dateStr)
+        const notesKey = getISOWeekKey(new Date(dateStr + 'T12:00:00'))
+        NotesPanel.render(dm.getNotes(notesKey, dateStr), dateStr, {
           onChange(date, idx, val) {
-            dm.setNote(weekKey, date, idx, val)
+            dm.setNote(notesKey, date, idx, val)
           }
         })
       },
       onEventChange(dateStr, timeSlot, text, colorType = 0) {
-        dm.setEvent(weekKey, dateStr, timeSlot, text, colorType)
+        dm.setEvent(dataWeekKey, dateStr, timeSlot, text, colorType)
       },
       onEventClear(dateStr, timeSlot) {
-        dm.clearEvent(weekKey, dateStr, timeSlot)
+        dm.clearEvent(dataWeekKey, dateStr, timeSlot)
       },
       onEventAdd(dateStr, timeSlot, text, colorType = 0) {
-        dm.addEvent(weekKey, dateStr, timeSlot, text, colorType)
+        dm.addEvent(dataWeekKey, dateStr, timeSlot, text, colorType)
       },
       onEventItemChange(dateStr, timeSlot, index, text, colorType = 0) {
-        dm.setEventItem(weekKey, dateStr, timeSlot, text, index, colorType)
+        dm.setEventItem(dataWeekKey, dateStr, timeSlot, text, index, colorType)
       },
       onEventItemClear(dateStr, timeSlot, index) {
-        dm.clearEventItem(weekKey, dateStr, timeSlot, index)
+        dm.clearEventItem(dataWeekKey, dateStr, timeSlot, index)
       }
     })
 
     // 渲染笔记面板
-    // 需要找到当前选中日期对应的周 key（可能与当前视图不同）
     const notesWeekKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'))
     NotesPanel.render(dm.getNotes(notesWeekKey, selectedDate), selectedDate, {
       onChange(date, idx, val) {
@@ -119,9 +197,9 @@ async function init() {
     })
 
     // 渲染右侧"本周重点"面板
-    RightPanel.render(dm.getWeekNotes(weekKey), formatWeekLabel(weekDates), {
+    RightPanel.render(dm.getWeekNotes(dataWeekKey), formatWeekLabel(weekDates), {
       onChange(idx, val) {
-        dm.setWeekNote(weekKey, idx, val)
+        dm.setWeekNote(dataWeekKey, idx, val)
       }
     })
 
@@ -183,15 +261,32 @@ async function init() {
 
   // ── 周导航 ──────────────────────────────────────────
   document.getElementById('btn-prev-week').addEventListener('click', () => {
-    currentOffset--
+    if (currentView === 'day') {
+      const d = new Date(selectedDate + 'T12:00:00')
+      d.setDate(d.getDate() - 1)
+      selectedDate = toLocalDateStr(d)
+    } else if (currentView === 'month') {
+      monthOffset--
+    } else {
+      currentOffset--
+    }
     render()
   })
   document.getElementById('btn-next-week').addEventListener('click', () => {
-    currentOffset++
+    if (currentView === 'day') {
+      const d = new Date(selectedDate + 'T12:00:00')
+      d.setDate(d.getDate() + 1)
+      selectedDate = toLocalDateStr(d)
+    } else if (currentView === 'month') {
+      monthOffset++
+    } else {
+      currentOffset++
+    }
     render()
   })
   document.getElementById('btn-week-label').addEventListener('click', () => {
     currentOffset = 0
+    monthOffset = 0
     selectedDate = today
     render()
   })
@@ -239,6 +334,18 @@ async function init() {
   // ── 窗口显示时自动聚焦到红线 ────────────────────────────
   window.electronAPI.onWindowShow(() => {
     WeekGrid.scrollToCurrentTime()
+  })
+
+  // ── 日/周视图切换胶囊 ────────────────────────────────
+  document.querySelectorAll('.pill-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view
+      if (view === currentView) return
+      document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      currentView = view
+      render()
+    })
   })
 }
 

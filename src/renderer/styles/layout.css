@@ -188,6 +188,7 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+  position: relative;
   /* 使用全局变量确保 Dark/Light 模式一致的呼吸区 */
   padding-top: calc(var(--title-bar-height) + var(--breathing-gap));
   padding-bottom: var(--breathing-gap);  /* 底部呼吸空间，与顶部对称 */
@@ -255,6 +256,87 @@
 #right-resizer.dragging {
   width: 2px;
   background: var(--grid-line-color);
+}
+
+/* ── 底部悬浮胶囊（日/周视图切换）────────────────── */
+#view-switcher {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  width: 162px;
+  height: 36px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  background: rgba(22, 22, 30, 0.82);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.16);
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+  z-index: 20;
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+}
+
+#view-switcher:hover {
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.38), 0 4px 12px rgba(0, 0, 0, 0.22);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+[data-theme="light"] #view-switcher {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(200, 185, 170, 0.35);
+  box-shadow: 0 10px 40px rgba(100, 75, 50, 0.10), 0 2px 8px rgba(100, 75, 50, 0.06);
+}
+
+[data-theme="light"] #view-switcher:hover {
+  box-shadow: 0 16px 50px rgba(100, 75, 50, 0.15), 0 4px 12px rgba(100, 75, 50, 0.09);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.pill-btn {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  transition: color 0.18s ease, background 0.18s ease;
+  letter-spacing: 0.3px;
+}
+
+.pill-btn:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+[data-theme="light"] .pill-btn:not(:last-child) {
+  border-right: 1px solid rgba(150, 130, 110, 0.18);
+}
+
+.pill-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .pill-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pill-btn.active {
+  background: rgba(var(--accent-rgb), 0.22);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+[data-theme="light"] .pill-btn.active {
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
 }
 
 /* ── 缩放手柄 ─────────────────────────────────────── */
