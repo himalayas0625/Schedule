@@ -360,3 +360,17 @@
   border-bottom-right-radius: var(--radius);
   -webkit-app-region: no-drag;
 }
+
+/* ── 响应式：窗口过窄时侧边栏自动隐藏 ────────────────────── */
+
+/* < 800px：隐藏左侧笔记面板及其拖拽手柄 */
+@media (max-width: 800px) {
+  #notes-panel,
+  #sidebar-resizer { display: none; }
+}
+
+/* < 600px：同时隐藏右侧面板及其拖拽手柄，日程网格独占全宽 */
+@media (max-width: 600px) {
+  #right-panel,
+  #right-resizer { display: none; }
+}

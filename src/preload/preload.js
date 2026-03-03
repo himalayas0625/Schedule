@@ -32,5 +32,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   onWindowShow: (callback) => {
     ipcRenderer.on('window:shown', () => callback())
-  }
+  },
+
+  // 天气（由主进程发起 HTTP，绕过渲染进程 CSP/CORS 限制）
+  weatherLocate:   ()          => ipcRenderer.invoke('weather:locate'),
+  weatherForecast: (lat, lon)  => ipcRenderer.invoke('weather:forecast', lat, lon),
 })

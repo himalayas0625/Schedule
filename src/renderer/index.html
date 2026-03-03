@@ -44,21 +44,31 @@
 
     <!-- 日程网格 -->
     <main id="schedule-grid">
-      <!-- 日视图：顶部信息胶囊 -->
+      <!-- 日视图：顶部信息胶囊（非对称三模块） -->
       <div id="day-header-pill">
-        <div class="dhp-date-circle"><span class="dhp-day-num">1</span></div>
-        <div class="dhp-info">
-          <div class="dhp-primary">
-            <span class="dhp-weekday-cn">周一</span>
-            <span class="dhp-weekday-en">Monday</span>
+        <!-- 左模块：日期圆圈 + 星期（上）+ 公历·阴历（下） -->
+        <div class="left-info">
+          <div class="dhp-date-circle"><span class="dhp-day-num">1</span></div>
+          <div class="left-stack">
+            <div class="dhp-primary">
+              <span class="dhp-weekday-cn">周一</span>
+              <span class="dhp-weekday-en">Monday</span>
+            </div>
+            <div class="dhp-date-lunar"></div>
           </div>
-          <div class="dhp-secondary"></div>
         </div>
-        <div class="dhp-widgets">
-          <span class="dhp-weather">☀️ 18°C</span>
-          <span class="dhp-completion">😐 已完成 0/3</span>
+        <!-- 中模块：名言警句居中，窄屏自动隐藏 -->
+        <div class="center-motto">
+          <span class="dhp-secondary"></span>
         </div>
-        <div class="dhp-progress"><div class="dhp-progress-fill"></div></div>
+        <!-- 右模块：天气（上）+ 沙漏倒计时（下），镜像堆栈对齐 -->
+        <div class="right-stack">
+          <span class="dhp-weather">
+            <span class="weather-city"></span>
+            <span class="weather-icon"></span>
+            <span class="weather-temp"></span>
+          </span>
+        </div>
       </div>
       <!-- 表头：星期列 -->
       <div id="grid-header"></div>

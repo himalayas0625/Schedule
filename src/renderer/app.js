@@ -1,6 +1,7 @@
 import { WeekGrid } from './weekGrid.js'
 import { NotesPanel, RightPanel } from './notesPanel.js'
 import { DataManager } from './dataManager.js'
+import { WeatherWidget } from './weatherWidget.js'
 
 // ── 工具函数 ──────────────────────────────────────────────────────────────────
 
@@ -107,14 +108,76 @@ function getLunarDate(dateStr) {
 
 // ── 日视图顶部信息胶囊更新 ────────────────────────────────────────────────────
 const DAILY_QUOTES = [
-  '专注是最高级的休息', '每一天都是新的开始', '行动是治愈恐惧的良药',
-  '简单生活，深度思考', '做好当下，未来自来', '慢即是快，少即是多',
-  '规律产生力量', '成长始于不舒适', '把时间花在值得的事上', '清醒比努力更重要',
+  // 道家
+  '损之又损，以至于无为',
+  '知足者富，强行者有志',
+  '为而不争，天下莫能与之争',
+  '致虚极，守静笃',
+  '无为而无不为',
+  // 庄子
+  '鱼相忘于江湖，人相忘于道术',
+  '吾生也有涯，而知也无涯',
+  '天地与我并生，万物与我为一',
+  // 儒家
+  '逝者如斯，不舍昼夜',
+  '君子不器',
+  '吾日三省吾身',
+  '己所不欲，勿施于人',
+  // 斯多葛
+  '你所能控制的，唯有自己的判断',
+  '不抵抗命运，而是接纳它',
+  '最大的自由，是选择如何看待已发生之事',
+  '什么都不想要，才能拥有一切',
+  // 加缪
+  '宇宙对你的漠然，正是你自由的证明',
+  '荒谬不消除，就带着它活下去',
+  '我反抗，故我存在',
+  '重要的不是治愈，而是带着病痛活着',
+  // 尼采
+  '凡杀不死我的，使我更强大',
+  '当你凝视深渊，深渊也在凝视你',
+  '一个人知道自己为何而活，便能忍受任何生活',
+  // 卡夫卡
+  '不要写你想写的，写你无法不写的',
+  '书是斧头，劈开我们心中冰封的海',
+  '一切深刻的东西都喜欢戴上面具',
+  // 里尔克
+  '未曾哭过长夜的人，不足以语人生',
+  '去爱一件事，便是接受它会消逝',
+  '孤独是我唯一忠实的伴侣',
+  // 博尔赫斯
+  '不必跑得太快，路本来就在那里',
+  '孤独的人有自己的神话',
+  // 布莱克
+  '把沙粒看成世界，把野花看成天堂',
+  // 卢梭
+  '人生而自由，却无往不在枷锁之中',
+  // 沈从文
+  '慢慢走，欣赏啊',
+  // 禅意
+  '留白处，才是真正的画',
+  '走得太快，灵魂会跟不上',
+  '清晨不忙，夜晚不慌，这就是好的一天',
+  '空杯心态，才能装下新知',
+  '呼吸是最短的冥想',
+  // 效率与专注
+  '把手头的事做完，便是哲学',
+  '完成胜于完美',
+  '做少，但做好',
+  '一次只做一件事，做到极致',
+  '深度专注，是这个时代最稀缺的能力',
+  '日拱一卒，功不唐捐',
+  // 时间与流逝
+  '时间不是河流，是我们自己在流动',
+  '你无法同时拥有年轻和对年轻的认知',
+  '每一次出走，都是为了更好地归来',
+  '凡值得做的事，都值得慢慢做',
 ]
 const CN_DAYS = ['周日','周一','周二','周三','周四','周五','周六']
 const EN_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
-function updateDayHeaderPill(dateStr, notesData) {
+
+function updateDayHeaderPill(dateStr) {
   const pill = document.getElementById('day-header-pill')
   if (!pill) return
   const d = new Date(dateStr + 'T12:00:00')
@@ -122,19 +185,13 @@ function updateDayHeaderPill(dateStr, notesData) {
   const lunar = getLunarDate(dateStr)
   const yearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`
   const dayIndex = Math.floor(d.getTime() / 86400000)
-  const quote = `"${DAILY_QUOTES[((dayIndex % DAILY_QUOTES.length) + DAILY_QUOTES.length) % DAILY_QUOTES.length]}"`
-  const secondary = [yearMonth, lunar, quote].filter(Boolean).join(' · ')
-
-  const completed = (notesData ?? []).filter(n => n && n.trim()).length
-  const mood = completed >= 2 ? '😊' : completed >= 1 ? '🙂' : '😐'
-  const pct = Math.round(completed / 3 * 100)
+  const quote = DAILY_QUOTES[((dayIndex % DAILY_QUOTES.length) + DAILY_QUOTES.length) % DAILY_QUOTES.length]
 
   pill.querySelector('.dhp-day-num').textContent = d.getDate()
   pill.querySelector('.dhp-weekday-cn').textContent = CN_DAYS[dow]
   pill.querySelector('.dhp-weekday-en').textContent = EN_DAYS[dow]
-  pill.querySelector('.dhp-secondary').textContent = secondary
-  pill.querySelector('.dhp-completion').textContent = `${mood} 已完成 ${completed}/3`
-  pill.querySelector('.dhp-progress-fill').style.width = `${pct}%`
+  pill.querySelector('.dhp-date-lunar').textContent = [yearMonth, lunar].filter(Boolean).join(' · ')
+  pill.querySelector('.dhp-secondary').textContent = quote
 }
 
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
@@ -149,6 +206,7 @@ async function init() {
   let monthOffset = 0                      // 0 = 本月，-1 = 上月，+1 = 下月
 
   WeekGrid.init()
+  WeatherWidget.init()   // 启动即缓存渲染，异步刷新，1h 静默更新
 
   // ── 渲染函数 ────────────────────────────────────────
   function render() {
@@ -253,7 +311,7 @@ async function init() {
 
     // 日视图：更新顶部信息胶囊
     if (currentView === 'day') {
-      updateDayHeaderPill(selectedDate, dm.getNotes(dataWeekKey, selectedDate))
+      updateDayHeaderPill(selectedDate)
     }
 
     // 渲染笔记面板

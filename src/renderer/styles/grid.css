@@ -604,12 +604,12 @@
 
 /* ── 日视图顶部信息胶囊 ────────────────────────────────── */
 #day-header-pill {
-  display: none;           /* 非日视图隐藏 */
+  display: none;
   position: relative;
   flex-shrink: 0;
-  height: 64px;
+  height: 44px;
   margin-bottom: 8px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
@@ -617,8 +617,7 @@
   -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
   align-items: center;
-  padding: 0 18px;
-  gap: 14px;
+  padding: 0 16px;
 }
 
 #schedule-grid.day-view #day-header-pill {
@@ -631,10 +630,18 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-/* 左侧金色圆圈 */
+/* 左模块：圆圈 + 双行堆叠，紧凑靠左 */
+.left-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+/* 金色日期圆圈（缩至 34px 适配 44px 胶囊） */
 .dhp-date-circle {
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--today-accent);
   display: flex;
@@ -644,90 +651,136 @@
 }
 
 .dhp-day-num {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: #fff;
   line-height: 1;
 }
 
-/* 中间双行文字 */
-.dhp-info {
-  flex: 1;
+/* 镜像堆栈：左右共用相同的 flex 列结构，确保行基准线对齐 */
+.left-stack {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  min-width: 0;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .dhp-primary {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
 }
 
 .dhp-weekday-cn {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .dhp-weekday-en {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
 }
 
+/* 公历·阴历（第二行），与右侧沙漏同透明度 */
+.dhp-date-lunar {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.4;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+/* 中模块：参与 flex 流，弹性伸缩 + 安全区 padding */
+.center-motto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;   /* 名言截断警戒线：左右各 16px 安全距离 */
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .dhp-secondary {
   font-size: 11px;
+  font-weight: 400;
   color: var(--text-muted);
-  opacity: 0.65;
+  opacity: 0.75;
+  letter-spacing: 0.8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
 }
 
-/* 右侧挂件 */
-.dhp-widgets {
+/* ── 响应式：逐级降级展示 ─────────────────────────────────── */
+
+/* < 900px：隐藏名言，左右核心数据不受影响 */
+@media (max-width: 900px) {
+  .center-motto { display: none; }
+}
+
+/* < 700px：隐藏农历行，只保留「周五 Friday」和「城市 温度」 */
+@media (max-width: 700px) {
+  .dhp-date-lunar { display: none; }
+}
+
+/* 镜像堆栈：右侧与左侧完全一致的 flex 列结构 */
+.right-stack {
+  margin-left: auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   justify-content: center;
-  gap: 5px;
-  flex-shrink: 0;
+  align-items: flex-end;
+  gap: 2px;
 }
 
-.dhp-weather,
-.dhp-completion {
-  font-size: 11px;
-  color: var(--text-muted);
+/* 天气 — 第一层级（主），字重 600 突显 */
+.dhp-weather {
+  display: flex;
+  align-items: flex-start;  /* 城市名上边缘与图标上边缘对齐 */
+  gap: 3px;
   white-space: nowrap;
+  line-height: 1.1;
+  transform: translateY(1px);  /* 整体下移 1px，远离上边缘 */
 }
 
-/* 底部进度条 */
-.dhp-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(255, 149, 0, 0.10);
+.weather-city {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.9;
+  line-height: 1.1;
 }
 
-.dhp-progress-fill {
-  height: 100%;
-  background: rgba(255, 149, 0, 0.55);
-  transition: width 0.45s ease;
-  border-radius: 0 1px 0 0;
+.weather-icon {
+  font-size: 13px;
+  line-height: 1.1;
 }
 
-[data-theme="light"] .dhp-progress {
-  background: rgba(255, 149, 0, 0.08);
+.weather-temp {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.9;
+  line-height: 1.1;
 }
 
-[data-theme="light"] .dhp-progress-fill {
-  background: rgba(255, 149, 0, 0.45);
+[data-theme="light"] .weather-city,
+[data-theme="light"] .weather-temp {
+  color: var(--text-primary);
+  opacity: 0.85;
 }
+
+
+
 
 /* ── 月视图 ───────────────────────────────────────────── */
 #schedule-grid.month-view #grid-header {

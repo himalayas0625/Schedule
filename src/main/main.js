@@ -3,6 +3,58 @@ const { createWindow, getMainWindow } = require('./windowManager')
 const { createTray } = require('./tray')
 const store = require('./store')
 const { autoUpdater } = require('electron-updater')
+const https = require('https')
+const http  = require('http')
+
+// ── 主进程 HTTP 工具（无 CORS / CSP 限制）────────────────────────────────────
+function httpGet(url) {
+  const lib = url.startsWith('https:') ? https : http
+  return new Promise((resolve, reject) => {
+    const req = lib.get(url, { timeout: 8000 }, (res) => {
+      if (res.statusCode !== 200) {
+        res.resume()
+        return reject(new Error(`HTTP ${res.statusCode}`))
+      }
+      let raw = ''
+      res.on('data', d => { raw += d })
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw)) } catch (e) { reject(e) }
+      })
+    })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')) })
+  })
+}
+
+// ── 天气 IPC ─────────────────────────────────────────────────────────────────
+
+// 定位：先 ipapi.co（HTTPS），失败再 ip-api.com（HTTP，国内可达）
+ipcMain.handle('weather:locate', async () => {
+  try {
+    const d = await httpGet('https://ipapi.co/json/')
+    if (d.latitude && !d.error) {
+      return { ok: true, city: d.city || '', lat: d.latitude, lon: d.longitude }
+    }
+  } catch {}
+  try {
+    const d = await httpGet('http://ip-api.com/json/?lang=zh-CN&fields=status,city,lat,lon')
+    if (d.status === 'success') {
+      return { ok: true, city: d.city || '', lat: d.lat, lon: d.lon }
+    }
+  } catch {}
+  return { ok: false, error: 'location failed' }
+})
+
+// 天气：Open-Meteo（全球免费，自动时区）
+ipcMain.handle('weather:forecast', async (_e, lat, lon) => {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`
+    const d = await httpGet(url)
+    return { ok: true, temp: Math.round(d.current.temperature_2m), code: d.current.weather_code }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
 
 // ── 自动更新（仅生产环境） ────────────────────────────────────
 function setupAutoUpdater() {
