@@ -74,6 +74,69 @@ function getMonthCalendarDates(year, month, startOfWeek = 1) {
   })
 }
 
+// ── 农历日期计算（2024-2027 年，含闰月）────────────────────────────────────────
+function getLunarDate(dateStr) {
+  const DAY_NAMES = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+                     '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+                     '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十']
+  // m=春节月(1-indexed), d=春节日, days=各农历月天数, names=对应月名（含闰月）
+  const DB = {
+    2024: { m:2, d:10, days:[30,29,30,29,30,29,30,29,30,29,30,30,29], names:['正月','二月','三月','四月','闰四月','五月','六月','七月','八月','九月','十月','冬月','腊月'] },
+    2025: { m:1, d:29, days:[30,29,30,29,30,29,29,30,29,30,29,30,29], names:['正月','二月','三月','四月','五月','六月','闰六月','七月','八月','九月','十月','冬月','腊月'] },
+    2026: { m:2, d:17, days:[30,29,30,30,29,30,29,30,29,30,30,29],    names:['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'] },
+    2027: { m:2, d: 6, days:[30,29,30,29,30,29,30,30,29,30,29,30],    names:['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'] },
+  }
+  const d = new Date(dateStr + 'T12:00:00')
+  const year = d.getFullYear()
+  let entry = DB[year]
+  let cnyDate = entry ? new Date(year, entry.m - 1, entry.d) : null
+  if (!entry || d < cnyDate) {
+    entry = DB[year - 1]
+    if (!entry) return ''
+    cnyDate = new Date(year - 1, entry.m - 1, entry.d)
+  }
+  let days = Math.floor((d - cnyDate) / 86400000)
+  let m = 0
+  for (; m < entry.days.length; m++) {
+    if (days < entry.days[m]) break
+    days -= entry.days[m]
+  }
+  if (m >= entry.names.length || days >= DAY_NAMES.length) return ''
+  return `农历${entry.names[m]}${DAY_NAMES[days]}`
+}
+
+// ── 日视图顶部信息胶囊更新 ────────────────────────────────────────────────────
+const DAILY_QUOTES = [
+  '专注是最高级的休息', '每一天都是新的开始', '行动是治愈恐惧的良药',
+  '简单生活，深度思考', '做好当下，未来自来', '慢即是快，少即是多',
+  '规律产生力量', '成长始于不舒适', '把时间花在值得的事上', '清醒比努力更重要',
+]
+const CN_DAYS = ['周日','周一','周二','周三','周四','周五','周六']
+const EN_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+
+function updateDayHeaderPill(dateStr, notesData) {
+  const pill = document.getElementById('day-header-pill')
+  if (!pill) return
+  const d = new Date(dateStr + 'T12:00:00')
+  const dow = d.getDay()
+  const lunar = getLunarDate(dateStr)
+  const yearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`
+  const dayIndex = Math.floor(d.getTime() / 86400000)
+  const quote = `"${DAILY_QUOTES[((dayIndex % DAILY_QUOTES.length) + DAILY_QUOTES.length) % DAILY_QUOTES.length]}"`
+  const secondary = [yearMonth, lunar, quote].filter(Boolean).join(' · ')
+
+  const completed = (notesData ?? []).filter(n => n && n.trim()).length
+  const mood = completed >= 2 ? '😊' : completed >= 1 ? '🙂' : '😐'
+  const pct = Math.round(completed / 3 * 100)
+
+  pill.querySelector('.dhp-day-num').textContent = d.getDate()
+  pill.querySelector('.dhp-weekday-cn').textContent = CN_DAYS[dow]
+  pill.querySelector('.dhp-weekday-en').textContent = EN_DAYS[dow]
+  pill.querySelector('.dhp-secondary').textContent = secondary
+  pill.querySelector('.dhp-completion').textContent = `${mood} 已完成 ${completed}/3`
+  pill.querySelector('.dhp-progress-fill').style.width = `${pct}%`
+}
+
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
 async function init() {
   const dm = new DataManager()
@@ -187,6 +250,11 @@ async function init() {
         dm.clearEventItem(dataWeekKey, dateStr, timeSlot, index)
       }
     })
+
+    // 日视图：更新顶部信息胶囊
+    if (currentView === 'day') {
+      updateDayHeaderPill(selectedDate, dm.getNotes(dataWeekKey, selectedDate))
+    }
 
     // 渲染笔记面板
     const notesWeekKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'))
