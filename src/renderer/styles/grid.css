@@ -425,7 +425,7 @@
   line-height: 1.5;
   resize: none;
   outline: none;
-  padding-right: 18px; /* 为右上角垃圾桶按钮留出空间（一个字距离） */
+  padding-right: 24px; /* 距离垃圾桶约1个字的空格 */
   box-sizing: border-box;
 }
 
@@ -447,11 +447,26 @@
   background: rgba(232, 17, 35, 0.12);
 }
 
-.editor-hint {
+/* ── 保存状态指示器 ─────────────────────────────────── */
+.save-indicator {
+  position: absolute;
+  top: 8px;
+  right: 32px;  /* 垃圾桶左侧 */
   font-size: 10px;
   color: var(--text-muted);
-  margin-top: 6px;
-  text-align: right;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.save-indicator.saving {
+  opacity: 0.3;
+}
+
+.save-indicator.saved {
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
 }
 
 /* ── 侧边栏拖拽手柄 ──────────────────────────────── */

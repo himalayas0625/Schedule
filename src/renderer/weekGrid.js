@@ -41,7 +41,7 @@ function _removeBlock(block, cell) {
   }
 }
 
-// ── 浮动编辑框 ────────────────────────────────────────────────────────────────
+// ── 浮动编辑框（无感自动保存）────────────────────────────────────────────────
 const FloatingEditor = {
   _editor: null,
   _textarea: null,
@@ -50,10 +50,20 @@ const FloatingEditor = {
   _currentCell: null,
   _currentColorType: 0,
   _colorDots: [],
+  _debounceTimer: null,
+  _saveIndicator: null,
+  _savedTimeout: null,
+  _lastSavedText: '',
+  _lastSavedColorType: 0,
 
   init() {
     this._editor = document.getElementById('floating-editor')
     this._textarea = document.getElementById('floating-textarea')
+
+    // 保存状态指示器（右上角，垃圾桶左侧）
+    this._saveIndicator = document.createElement('span')
+    this._saveIndicator.className = 'save-indicator'
+    this._editor.appendChild(this._saveIndicator)
 
     // 右上角垃圾桶
     const trashBtn = document.createElement('button')
@@ -61,7 +71,8 @@ const FloatingEditor = {
     trashBtn.title = '删除此日程'
     trashBtn.innerHTML = '🗑'
     trashBtn.addEventListener('mousedown', (e) => {
-      e.preventDefault() // 阻止触发外部 mousedown 提交
+      e.preventDefault()
+      this._forceSave() // 删除前先保存
       this._onDelete && this._onDelete()
       this.close()
     })
@@ -85,33 +96,20 @@ const FloatingEditor = {
         e.preventDefault()
         this._currentColorType = type
         this._updateDots()
+        this._scheduleSave() // 颜色变更也触发保存
       })
       colorRow.appendChild(dot)
       this._colorDots.push(dot)
     })
     this._editor.appendChild(colorRow)
 
-    // 底部提示
-    const hint = document.createElement('div')
-    hint.className = 'editor-hint'
-    hint.textContent = 'Enter 保存 · Alt+Enter 换行 · Esc 取消'
-    this._editor.appendChild(hint)
-
+    // 键盘事件：仅保留 Esc 取消
     this._textarea.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { this.cancel(); e.preventDefault() }
-      // Alt+Enter 换行（手动插入换行符）
-      if (e.key === 'Enter' && e.altKey) {
+      if (e.key === 'Escape') {
+        this._cancelAndClose()
         e.preventDefault()
-        const textarea = this._textarea
-        const start = textarea.selectionStart
-        const end = textarea.selectionEnd
-        const value = textarea.value
-        textarea.value = value.substring(0, start) + '\n' + value.substring(end)
-        textarea.selectionStart = textarea.selectionEnd = start + 1
-        return
       }
-      // Enter 保存（不含修饰键）
-      if (e.key === 'Enter' && !e.shiftKey && !e.altKey) { this.commit(); e.preventDefault() }
+      // Enter 键原生换行，不再拦截
     })
 
     // 右键菜单
@@ -123,17 +121,33 @@ const FloatingEditor = {
     // 主进程触发删除
     window.electronAPI.onEditorDeleteTrigger(() => {
       if (this._editor.style.display === 'none') return
+      this._forceSave()
       this._onDelete && this._onDelete()
       this.close()
     })
 
-    // 点击编辑框外部 → 提交
+    // 输入事件 → 防抖保存
+    this._textarea.addEventListener('input', () => {
+      this._scheduleSave()
+    })
+
+    // 失焦 → 强制保存
+    this._textarea.addEventListener('blur', () => {
+      // 延迟一点执行，避免与点击外部关闭冲突
+      setTimeout(() => {
+        if (this._editor.style.display !== 'none') {
+          this._forceSave()
+        }
+      }, 50)
+    })
+
+    // 点击编辑框外部 → 关闭
     document.addEventListener('mousedown', (e) => {
       if (this._editor.style.display !== 'none' &&
           !this._editor.contains(e.target) &&
           !e.target.classList.contains('grid-cell') &&
           !e.target.classList.contains('event-block')) {
-        this.commit()
+        this.close()
       }
     })
   },
@@ -144,11 +158,59 @@ const FloatingEditor = {
     })
   },
 
+  // 显示保存状态
+  _showSaving() {
+    if (!this._saveIndicator) return
+    clearTimeout(this._savedTimeout)
+    this._saveIndicator.textContent = '...'
+    this._saveIndicator.className = 'save-indicator saving'
+  },
+
+  _showSaved() {
+    if (!this._saveIndicator) return
+    this._saveIndicator.textContent = '✓'
+    this._saveIndicator.className = 'save-indicator saved'
+    this._savedTimeout = setTimeout(() => {
+      this._saveIndicator.className = 'save-indicator'
+    }, 2000)
+  },
+
+  // 调度防抖保存
+  _scheduleSave() {
+    clearTimeout(this._debounceTimer)
+    this._showSaving()
+    this._debounceTimer = setTimeout(() => {
+      this._doSave()
+    }, 800)
+  },
+
+  // 执行保存（仅当内容有变化时）
+  _doSave() {
+    const text = this._textarea.value.trim()
+    // 仅当内容或颜色有变化时才保存
+    if (text !== this._lastSavedText || this._currentColorType !== this._lastSavedColorType) {
+      if (this._onCommit) {
+        this._onCommit(text, this._currentColorType)
+      }
+      this._lastSavedText = text
+      this._lastSavedColorType = this._currentColorType
+    }
+    this._showSaved()
+  },
+
+  // 强制保存（失焦/关闭前）
+  _forceSave() {
+    clearTimeout(this._debounceTimer)
+    this._doSave()
+  },
+
   open(cell, currentText, currentColorType, onCommit, onDelete) {
     this._onCommit = onCommit
     this._onDelete = onDelete || null
     this._currentCell = cell
     this._currentColorType = currentColorType ?? 0
+    this._lastSavedText = currentText.trim()
+    this._lastSavedColorType = this._currentColorType
     this._updateDots()
 
     // 定位：尝试在格子下方，边界检测
@@ -171,26 +233,34 @@ const FloatingEditor = {
     this._textarea.value = currentText
     this._textarea.focus()
     this._textarea.select()
+
+    // 重置状态指示器
+    if (this._saveIndicator) {
+      this._saveIndicator.className = 'save-indicator'
+      this._saveIndicator.textContent = ''
+    }
   },
 
-  commit() {
-    if (this._editor.style.display === 'none') return
-    const text = this._textarea.value.trim()
-    if (this._onCommit) this._onCommit(text, this._currentColorType)
-    this.close()
-  },
-
-  cancel() {
+  // 取消并关闭（不保存）
+  _cancelAndClose() {
+    clearTimeout(this._debounceTimer)
+    clearTimeout(this._savedTimeout)
     this.close()
   },
 
   close() {
+    // 关闭前强制保存未完成的防抖任务
+    this._forceSave()
     this._editor.style.display = 'none'
     this._textarea.value = ''
     this._onCommit = null
     this._onDelete = null
     this._currentCell = null
     this._currentColorType = 0
+    this._lastSavedText = ''
+    this._lastSavedColorType = 0
+    clearTimeout(this._debounceTimer)
+    clearTimeout(this._savedTimeout)
   }
 }
 
