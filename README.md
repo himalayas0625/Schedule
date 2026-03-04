@@ -2,7 +2,7 @@
 
 一款简洁优雅的 Electron 桌面日程管理应用，支持日/周/月视图，让你轻松规划每一天。
 
-![Screenshot](assets/dark-view.png)
+![Screenshot](assets/light-view.png)
 
 ## 功能特性
 
