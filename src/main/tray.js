@@ -3,7 +3,7 @@ const path = require('path')
 
 let tray = null
 
-function createTray(win, store) {
+function createTray(win, store, checkForUpdates) {
   // 使用 logo.png 作为托盘图标（打包后在 extraResources，开发时在根目录）
   let iconPath = app.isPackaged
     ? path.join(process.resourcesPath, 'logo.png')
@@ -18,7 +18,7 @@ function createTray(win, store) {
   }
 
   tray = new Tray(icon)
-  tray.setToolTip('屏幕日程')
+  tray.setToolTip(`屏幕日程 v${app.getVersion()}`)
 
   function buildMenu() {
     const isVisible = win.isVisible()
@@ -62,6 +62,17 @@ function createTray(win, store) {
         click: () => {
           win.show()
           win.webContents.send('quotes:edit')
+        }
+      },
+      { type: 'separator' },
+      {
+        label: `版本 ${app.getVersion()}`,
+        enabled: false  // 灰色不可点击
+      },
+      {
+        label: '检查更新...',
+        click: () => {
+          checkForUpdates && checkForUpdates()
         }
       },
       { type: 'separator' },

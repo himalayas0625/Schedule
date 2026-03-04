@@ -57,6 +57,9 @@ ipcMain.handle('weather:forecast', async (_e, lat, lon) => {
 })
 
 // ── 自动更新（仅生产环境） ────────────────────────────────────
+let lastCheckTime = 0
+const CHECK_INTERVAL = 60 * 60 * 1000 // 1小时检查一次
+
 function setupAutoUpdater() {
   // 开发环境跳过，避免干扰调试
   if (!app.isPackaged) return
@@ -64,26 +67,44 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = true          // 静默下载，下载完再提示
   autoUpdater.autoInstallOnAppQuit = false // 由用户决定何时安装
 
-  autoUpdater.on('update-available', () => {
+  autoUpdater.on('update-available', (info) => {
     const win = getMainWindow()
     dialog.showMessageBox(win, {
       type: 'info',
       title: '发现新版本',
-      message: '有新版本可用，正在后台下载，下载完成后会提示您安装。',
+      message: `发现新版本 ${info.version}，正在后台下载，下载完成后会提示您安装。`,
       buttons: ['好的']
     })
   })
 
-  autoUpdater.on('update-downloaded', () => {
+  // 下载进度
+  autoUpdater.on('download-progress', (progressObj) => {
+    const win = getMainWindow()
+    if (win) {
+      win.webContents.send('update:progress', {
+        percent: Math.round(progressObj.percent),
+        transferred: Math.round(progressObj.transferred / 1024 / 1024 * 100) / 100,
+        total: Math.round(progressObj.total / 1024 / 1024 * 100) / 100
+      })
+    }
+    // 同时在控制台输出进度
+    console.log(`[updater] 下载进度: ${Math.round(progressObj.percent)}%`)
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
     const win = getMainWindow()
     dialog.showMessageBox(win, {
       type: 'question',
       title: '更新就绪',
-      message: '新版本已下载完成，立即重启并安装？',
+      message: `新版本 ${info.version} 已下载完成，立即重启并安装？`,
       buttons: ['立即安装', '稍后']
     }).then(({ response }) => {
       if (response === 0) autoUpdater.quitAndInstall()
     })
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[updater] 当前已是最新版本')
   })
 
   autoUpdater.on('error', (err) => {
@@ -91,7 +112,73 @@ function setupAutoUpdater() {
   })
 
   // 启动后延迟 10s 检查，避免与主窗口初始化竞争
-  setTimeout(() => autoUpdater.checkForUpdates(), 10_000)
+  setTimeout(() => {
+    autoUpdater.checkForUpdates()
+    lastCheckTime = Date.now()
+  }, 10_000)
+}
+
+// 手动检查更新（供托盘菜单调用）
+async function checkForUpdates() {
+  if (!app.isPackaged) {
+    const win = getMainWindow()
+    dialog.showMessageBox(win, {
+      type: 'info',
+      title: '检查更新',
+      message: '开发环境不支持更新检查。\n请使用打包后的版本。',
+      buttons: ['好的']
+    })
+    return { available: false, message: '开发环境' }
+  }
+
+  // 防止频繁检查
+  const now = Date.now()
+  if (now - lastCheckTime < 60_000) {
+    const win = getMainWindow()
+    dialog.showMessageBox(win, {
+      type: 'info',
+      title: '检查更新',
+      message: '刚刚已经检查过了，请稍后再试。',
+      buttons: ['好的']
+    })
+    return { available: false, message: '请求过于频繁' }
+  }
+
+  try {
+    const result = await autoUpdater.checkForUpdates()
+    lastCheckTime = now
+
+    if (!result || !result.updateInfo) {
+      throw new Error('无法获取更新信息')
+    }
+
+    const { updateInfo } = result
+    const currentVersion = app.getVersion()
+
+    // 如果没有更新
+    if (updateInfo.version === currentVersion) {
+      const win = getMainWindow()
+      dialog.showMessageBox(win, {
+        type: 'info',
+        title: '检查更新',
+        message: `当前已是最新版本 ${currentVersion}`,
+        buttons: ['好的']
+      })
+      return { available: false, currentVersion }
+    }
+
+    return { available: true, currentVersion, latestVersion: updateInfo.version }
+  } catch (err) {
+    console.error('[updater] 手动检查失败:', err.message)
+    const win = getMainWindow()
+    dialog.showMessageBox(win, {
+      type: 'error',
+      title: '检查更新失败',
+      message: `检查更新时发生错误：\n${err.message}`,
+      buttons: ['好的']
+    })
+    return { available: false, error: err.message }
+  }
 }
 
 // 防止多实例
@@ -165,7 +252,7 @@ app.whenReady().then(() => {
   }
 
   const win = createWindow(store)
-  createTray(win, store)
+  createTray(win, store, checkForUpdates)
   registerShortcut(win)
   setupAutoUpdater()
 })
