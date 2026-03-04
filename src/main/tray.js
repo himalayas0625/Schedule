@@ -58,6 +58,14 @@ function createTray(win, store) {
       },
       { type: 'separator' },
       {
+        label: '我的名言',
+        click: () => {
+          win.show()
+          win.webContents.send('quotes:edit')
+        }
+      },
+      { type: 'separator' },
+      {
         label: '退出',
         click: () => {
           win.forceQuit = true

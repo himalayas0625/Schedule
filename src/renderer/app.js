@@ -177,7 +177,7 @@ const CN_DAYS = ['周日','周一','周二','周三','周四','周五','周六']
 const EN_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
 
-function updateDayHeaderPill(dateStr) {
+function updateDayHeaderPill(dateStr, customQuotes = []) {
   const pill = document.getElementById('day-header-pill')
   if (!pill) return
   const d = new Date(dateStr + 'T12:00:00')
@@ -185,7 +185,10 @@ function updateDayHeaderPill(dateStr) {
   const lunar = getLunarDate(dateStr)
   const yearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`
   const dayIndex = Math.floor(d.getTime() / 86400000)
-  const quote = DAILY_QUOTES[((dayIndex % DAILY_QUOTES.length) + DAILY_QUOTES.length) % DAILY_QUOTES.length]
+
+  // 混合显示：用户名言 + 内置名言
+  const allQuotes = [...customQuotes, ...DAILY_QUOTES]
+  const quote = allQuotes[((dayIndex % allQuotes.length) + allQuotes.length) % allQuotes.length]
 
   pill.querySelector('.dhp-day-num').textContent = d.getDate()
   pill.querySelector('.dhp-weekday-cn').textContent = CN_DAYS[dow]
@@ -311,7 +314,7 @@ async function init() {
 
     // 日视图：更新顶部信息胶囊
     if (currentView === 'day') {
-      updateDayHeaderPill(selectedDate)
+      updateDayHeaderPill(selectedDate, dm.settings.customQuotes || [])
     }
 
     // 渲染笔记面板
@@ -473,6 +476,73 @@ async function init() {
       render()
     })
   })
+
+  // ── 名言编辑模态框 ──────────────────────────────────────
+  const quotesModal = document.createElement('div')
+  quotesModal.id = 'quotes-modal'
+  quotesModal.innerHTML = `
+    <div class="quotes-modal-content">
+      <div class="quotes-modal-header">
+        <span>编辑我的名言</span>
+        <button class="quotes-modal-close">&times;</button>
+      </div>
+      <div class="quotes-modal-body">
+        <textarea id="quotes-textarea" placeholder="每行输入一条名言&#10;例如：&#10;人生如逆旅，我亦是行人&#10;行到水穷处，坐看云起时"></textarea>
+        <div class="quotes-modal-hint">每行一条，保存后与内置名言混合显示</div>
+      </div>
+      <div class="quotes-modal-footer">
+        <button id="quotes-cancel" class="quotes-btn-secondary">取消</button>
+        <button id="quotes-save" class="quotes-btn-primary">保存</button>
+      </div>
+    </div>
+  `
+  document.body.appendChild(quotesModal)
+
+  const quotesTextarea = quotesModal.querySelector('#quotes-textarea')
+  const quotesCloseBtn = quotesModal.querySelector('.quotes-modal-close')
+  const quotesCancelBtn = quotesModal.querySelector('#quotes-cancel')
+  const quotesSaveBtn = quotesModal.querySelector('#quotes-save')
+
+  function openQuotesModal() {
+    const customQuotes = dm.settings.customQuotes || []
+    quotesTextarea.value = customQuotes.join('\n')
+    quotesModal.classList.add('visible')
+    quotesTextarea.focus()
+  }
+
+  function closeQuotesModal() {
+    quotesModal.classList.remove('visible')
+  }
+
+  function saveQuotes() {
+    const text = quotesTextarea.value.trim()
+    const quotes = text ? text.split('\n').map(q => q.trim()).filter(Boolean) : []
+    dm.saveSetting('customQuotes', quotes)
+    closeQuotesModal()
+    // 如果在日视图，刷新名言显示
+    if (currentView === 'day') {
+      updateDayHeaderPill(selectedDate, quotes)
+    }
+  }
+
+  quotesCloseBtn.addEventListener('click', closeQuotesModal)
+  quotesCancelBtn.addEventListener('click', closeQuotesModal)
+  quotesSaveBtn.addEventListener('click', saveQuotes)
+
+  quotesModal.addEventListener('click', (e) => {
+    if (e.target === quotesModal) closeQuotesModal()
+  })
+
+  quotesTextarea.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeQuotesModal()
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      saveQuotes()
+    }
+  })
+
+  // 监听托盘菜单触发
+  window.electronAPI.onQuotesEdit(openQuotesModal)
 }
 
 init().catch(console.error)

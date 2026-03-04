@@ -261,7 +261,7 @@
 /* ── 底部悬浮胶囊（日/周视图切换）────────────────── */
 #view-switcher {
   position: absolute;
-  bottom: 34px;
+  bottom: 38px;
   left: 50%;
   transform: translateX(-50%) translateY(0);
   width: 162px;
@@ -361,16 +361,165 @@
   -webkit-app-region: no-drag;
 }
 
-/* ── 响应式：窗口过窄时侧边栏自动隐藏 ────────────────────── */
+/* ── 响应式：窗口过窄时侧边栏自动隐藏（已禁用）────────────────────── */
 
-/* < 800px：隐藏左侧笔记面板及其拖拽手柄 */
-@media (max-width: 800px) {
-  #notes-panel,
-  #sidebar-resizer { display: none; }
+/* 已禁用自动隐藏，侧边栏始终显示 */
+
+/* ── 名言编辑模态框 ─────────────────────────────────────── */
+#quotes-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
-/* < 600px：同时隐藏右侧面板及其拖拽手柄，日程网格独占全宽 */
-@media (max-width: 600px) {
-  #right-panel,
-  #right-resizer { display: none; }
+#quotes-modal.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.quotes-modal-content {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .quotes-modal-content {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.quotes-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .quotes-modal-header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.quotes-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.quotes-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.quotes-modal-body {
+  padding: 20px;
+}
+
+#quotes-textarea {
+  width: 100%;
+  height: 200px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+#quotes-textarea:focus {
+  border-color: var(--accent);
+}
+
+#quotes-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] #quotes-textarea {
+  background: #f8f8f8;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.quotes-modal-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.quotes-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .quotes-modal-footer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.quotes-btn-secondary,
+.quotes-btn-primary {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.quotes-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.quotes-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.quotes-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.quotes-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.quotes-btn-primary:active,
+.quotes-btn-secondary:active {
+  transform: scale(0.97);
+}
+
+[data-theme="light"] .quotes-btn-secondary {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .quotes-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.08);
 }
