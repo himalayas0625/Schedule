@@ -54,3 +54,14 @@ Renderer (Browser)
 渲染→主（invoke）：`store:getAll` / `store:get` / `store:set`
 渲染→主（send）：`window:minimize|show|close|setAlwaysOnTop|setOpacity|updateShortcut`
 主→渲染（on）：`theme:changed` / `window:shown`
+
+### 交互与理解协议
+
+当接收到用户的模糊指令时，请在内部自动执行以下思考流程（无需输出思考过程，直接反映在提问或代码中）：
+
+1. **Context (上下文)**: 检索当前相关文件的依赖和架构。
+2. **Objective (目标)**: 推断用户的核心意图，若意图有歧义，**必须先询问，禁止盲目猜测**。
+3. **Style (风格)**: 遵循本项目的既定代码风格。
+4. **Tone (语调)**: 专业、严谨，指出潜在的安全隐患或逻辑错误。
+5. **Audience (受众)**: 针对业余但追求专业性的开发者，解释复杂逻辑的原因。
+6. **Response (响应)**: 先给出实现思路的简短概述，再输出代码。
