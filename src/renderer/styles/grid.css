@@ -323,8 +323,6 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -348,11 +346,18 @@
   font-size: 10px;
   font-weight: 500;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   display: flex;
   align-items: center;
   cursor: pointer;
+}
+
+/* 文本截断交由 span 子元素处理（flex 容器直接设置 text-overflow 无效） */
+.event-block .event-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 [data-theme="light"] .grid-cell.multi-event .event-block {

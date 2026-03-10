@@ -577,7 +577,6 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
 
   const block = document.createElement('div')
   block.className = 'event-block'
-  block.textContent = text
   block.title = text
   block.draggable = true
   block.dataset.index = idx
@@ -585,17 +584,23 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
   _applyCategoryClass(block, text)
   _applyColorClass(block, colorType)
 
+  // 用 span 包裹文本，使 text-overflow: ellipsis 在 flex 容器内正确截断
+  const textSpan = document.createElement('span')
+  textSpan.className = 'event-text'
+  textSpan.textContent = text
+  block.appendChild(textSpan)
+
   // 点击 block → 编辑该事件
   block.addEventListener('click', (e) => {
     e.stopPropagation()
     FloatingEditor.open(
       cell,
-      block.textContent.trim(),
+      block.querySelector('.event-text').textContent.trim(),
       parseInt(block.dataset.colorType) || 0,
       (newText, newColorType) => {
         const currentIdx = parseInt(block.dataset.index)
         if (newText) {
-          block.textContent = newText
+          block.querySelector('.event-text').textContent = newText
           block.title = newText
           block.dataset.colorType = newColorType
           _applyCategoryClass(block, newText)
@@ -621,7 +626,7 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
       date: dateStr,
       timeSlot,
       index: parseInt(block.dataset.index),
-      text: block.textContent.trim(),
+      text: block.querySelector('.event-text').textContent.trim(),
       colorType: parseInt(block.dataset.colorType) || 0
     }
     e.dataTransfer.effectAllowed = 'move'
