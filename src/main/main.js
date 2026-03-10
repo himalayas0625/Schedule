@@ -1,4 +1,4 @@
-const { app, ipcMain, globalShortcut, Menu, dialog } = require('electron')
+const { app, ipcMain, globalShortcut, Menu, dialog, BrowserWindow } = require('electron')
 const { createWindow, getMainWindow } = require('./windowManager')
 const { createTray } = require('./tray')
 const store = require('./store')
@@ -99,7 +99,12 @@ function setupAutoUpdater() {
       message: `新版本 ${info.version} 已下载完成，立即重启并安装？`,
       buttons: ['立即安装', '稍后']
     }).then(({ response }) => {
-      if (response === 0) autoUpdater.quitAndInstall()
+      if (response === 0) {
+        // 先销毁所有窗口，避免关闭拦截
+        BrowserWindow.getAllWindows().forEach(w => w.destroy())
+        // 强制退出并安装
+        autoUpdater.quitAndInstall(false, true)
+      }
     })
   })
 
