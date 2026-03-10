@@ -100,10 +100,13 @@ function setupAutoUpdater() {
       buttons: ['立即安装', '稍后']
     }).then(({ response }) => {
       if (response === 0) {
-        // 先销毁所有窗口，避免关闭拦截
-        BrowserWindow.getAllWindows().forEach(w => w.destroy())
+        // 设置强制退出标志，绕过关闭拦截
+        BrowserWindow.getAllWindows().forEach(w => {
+          w.forceQuit = true
+          w.close()
+        })
         // 强制退出并安装
-        autoUpdater.quitAndInstall(false, true)
+        setImmediate(() => autoUpdater.quitAndInstall(false, true))
       }
     })
   })
