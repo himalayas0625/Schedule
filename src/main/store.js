@@ -1,4 +1,4 @@
-const Store = require('electron-store')
+const Store = require('electron-store');
 
 const schema = {
   weeks: {
@@ -17,7 +17,7 @@ const schema = {
       launchAtLogin: false
     }
   }
-}
+};
 
-const store = new Store({ schema, name: 'schedule-data' })
-module.exports = store
+const store = new Store({ schema, name: 'schedule-data' });
+module.exports = store;

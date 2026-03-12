@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // 数据存储
@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   show: () => ipcRenderer.send('window:show'),
   close: () => ipcRenderer.send('window:close'),
   onMaximizeChange: (callback) => {
-    ipcRenderer.on('window:maximizeChanged', (_e, isMaximized) => callback(isMaximized))
+    ipcRenderer.on('window:maximizeChanged', (_e, isMaximized) => callback(isMaximized));
   },
   setAlwaysOnTop: (val) => ipcRenderer.send('window:setAlwaysOnTop', val),
   setOpacity: (val) => ipcRenderer.send('window:setOpacity', val),
@@ -23,15 +23,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 编辑器右键菜单
   showEditorContextMenu: () => ipcRenderer.send('show-editor-context-menu'),
   onEditorDeleteTrigger: (callback) => {
-    ipcRenderer.on('trigger-event-delete', () => callback())
+    ipcRenderer.on('trigger-event-delete', () => callback());
   },
 
   // 事件监听（主进程推送）
   onThemeChange: (callback) => {
-    ipcRenderer.on('theme:changed', (_e, theme) => callback(theme))
+    ipcRenderer.on('theme:changed', (_e, theme) => callback(theme));
   },
   onWindowShow: (callback) => {
-    ipcRenderer.on('window:shown', () => callback())
+    ipcRenderer.on('window:shown', () => callback());
   },
 
   // 天气（由主进程发起 HTTP，绕过渲染进程 CSP/CORS 限制）
@@ -40,6 +40,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 名言编辑
   onQuotesEdit: (callback) => {
-    ipcRenderer.on('quotes:edit', () => callback())
-  },
-})
+    ipcRenderer.on('quotes:edit', () => callback());
+  }
+});
