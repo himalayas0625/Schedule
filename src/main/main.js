@@ -7,23 +7,151 @@ const https = require('https');
 const http  = require('http');
 
 // ── 主进程 HTTP 工具（无 CORS / CSP 限制）────────────────────────────────────
-function httpGet(url) {
+function httpGet(url, options = {}) {
   const lib = url.startsWith('https:') ? https : http;
   return new Promise((resolve, reject) => {
-    const req = lib.get(url, { timeout: 8000 }, (res) => {
+    let settled = false;  // 防止重复 settle
+    const req = lib.get(url, { timeout: options.timeout || 8000 }, (res) => {
+      if (settled) return;
       if (res.statusCode !== 200) {
+        settled = true;
         res.resume();
         return reject(new Error(`HTTP ${res.statusCode}`));
       }
       let raw = '';
       res.on('data', d => { raw += d; });
       res.on('end', () => {
+        if (settled) return;
+        settled = true;
         try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
       });
     });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.on('error', (e) => {
+      if (settled) return;
+      settled = true;
+      reject(e);
+    });
+    req.on('timeout', () => {
+      if (settled) return;
+      settled = true;
+      req.destroy();
+      reject(new Error('timeout'));
+    });
+    // AbortController 支持（once: true 避免监听器累积）
+    if (options.signal) {
+      options.signal.addEventListener('abort', () => {
+        if (settled) return;
+        settled = true;
+        req.destroy();
+        reject(new Error('aborted'));
+      }, { once: true });
+    }
   });
+}
+
+// ── 错误类型枚举映射（脱敏）─────────────────────────────────────────────────
+const ERROR_TYPE_MAP = {
+  'timeout': 'timeout',
+  'aborted': 'aborted',
+  'ECONNREFUSED': 'network',
+  'ENOTFOUND': 'network',
+  'ETIMEDOUT': 'timeout',
+  'ECONNRESET': 'network',
+  'invalid response': 'parse'
+};
+
+function mapErrorType(err) {
+  const msg = err?.message || '';
+  // 优先匹配已知模式
+  for (const [pattern, type] of Object.entries(ERROR_TYPE_MAP)) {
+    if (msg.includes(pattern)) return type;
+  }
+  // HTTP 状态码
+  if (msg.startsWith('HTTP ')) return 'http_error';
+  // 默认
+  return 'unknown';
+}
+
+// ── 脱敏日志（固定字段白名单）─────────────────────────────────────────────────
+function logLocation(service, status, errorType, ms) {
+  console.log(JSON.stringify({
+    module: 'locate',
+    service,
+    status,
+    errorType,
+    ms
+  }));
+}
+
+// ── 并发定位服务（Promise.any + AbortController）───────────────────────────────
+const LOCATION_TIMEOUT = 5000; // 总预算 5 秒
+
+async function fetchIpapi(signal) {
+  const t0 = Date.now();
+  try {
+    const d = await httpGet('https://ipapi.co/json/', { timeout: 4000, signal });
+    // 显式校验（避免 truthy 判断导致纬度 0 被误判）
+    if (Number.isFinite(d.latitude) && Number.isFinite(d.longitude) && !d.error) {
+      logLocation('ipapi', 'success', null, Date.now() - t0);
+      return { city: d.city || '', lat: d.latitude, lon: d.longitude, _service: 'ipapi' };
+    }
+    throw new Error('invalid response');
+  } catch (e) {
+    logLocation('ipapi', 'fail', mapErrorType(e), Date.now() - t0);
+    throw e;
+  }
+}
+
+async function fetchIpinfo(signal) {
+  const t0 = Date.now();
+  try {
+    const d = await httpGet('https://ipinfo.io/json', { timeout: 4000, signal });
+    // ipinfo 返回 "lat,lon" 字符串
+    if (d.loc && typeof d.loc === 'string') {
+      const [latStr, lonStr] = d.loc.split(',');
+      const lat = parseFloat(latStr);
+      const lon = parseFloat(lonStr);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        logLocation('ipinfo', 'success', null, Date.now() - t0);
+        return { city: d.city || '', lat, lon, _service: 'ipinfo' };
+      }
+    }
+    throw new Error('invalid response');
+  } catch (e) {
+    logLocation('ipinfo', 'fail', mapErrorType(e), Date.now() - t0);
+    throw e;
+  }
+}
+
+async function locateWithFallback() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), LOCATION_TIMEOUT);
+  const signal = controller.signal;
+
+  const services = [
+    { name: 'ipapi', fn: () => fetchIpapi(signal) },
+    { name: 'ipinfo', fn: () => fetchIpinfo(signal) }
+  ];
+
+  try {
+    // Promise.any: 首个成功即返回
+    const result = await Promise.any(services.map(s => s.fn()));
+    clearTimeout(timeoutId);
+    return { ok: true, city: result.city, lat: result.lat, lon: result.lon };
+  } catch (aggregate) {
+    clearTimeout(timeoutId);
+    // 显式处理 AggregateError（Promise.any 全失败时抛出）
+    let errorSummary = 'all_failed';
+    if (aggregate instanceof AggregateError && aggregate.errors) {
+      const types = aggregate.errors.map(e => mapErrorType(e));
+      // 去重后输出
+      errorSummary = [...new Set(types)].join(',');
+    }
+    logLocation('fallback', 'fail', errorSummary, LOCATION_TIMEOUT);
+    return { ok: false, error: 'location failed' };
+  } finally {
+    controller.abort(); // 确保取消所有未完成请求
+  }
 }
 
 // ── IPC 参数校验（显式 allowlist）─────────────────────────────────────────────
@@ -76,15 +204,9 @@ const validate = {
 
 // ── 天气 IPC ─────────────────────────────────────────────────────────────────
 
-// 定位：仅使用 HTTPS（移除明文 HTTP 回退）
+// 定位：并发 fallback（ipapi → ipinfo）
 ipcMain.handle('weather:locate', async () => {
-  try {
-    const d = await httpGet('https://ipapi.co/json/');
-    if (d.latitude && !d.error) {
-      return { ok: true, city: d.city || '', lat: d.latitude, lon: d.longitude };
-    }
-  } catch { /* ipapi failed */ }
-  return { ok: false, error: 'location failed' };
+  return await locateWithFallback();
 });
 
 // 天气预报：添加经纬度校验
