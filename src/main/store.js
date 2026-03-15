@@ -10,7 +10,7 @@ const schema = {
     default: {
       alwaysOnTop: true,
       opacity: 0.95,
-      startOfWeek: 1,
+      startOfWeek: 0,
       theme: 'system',
       backgroundBlur: true,
       shortcut: 'Alt+Space',

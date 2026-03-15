@@ -24,7 +24,7 @@ function getISOWeekKey(date) {
 }
 
 // 获取某周（含偏移）的 7 个 ISO 日期字符串（周一起始）
-function getWeekDates(offset = 0, startOfWeek = 1) {
+function getWeekDates(offset = 0, startOfWeek = 0) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const day = today.getDay();
@@ -63,7 +63,7 @@ function formatDayLabel(dateStr) {
 }
 
 // 获取月视图日历网格（6×7 = 42 天，startOfWeek 对齐周一/周日）
-function getMonthCalendarDates(year, month, startOfWeek = 1) {
+function getMonthCalendarDates(year, month, startOfWeek = 0) {
   const firstDay = new Date(year, month - 1, 1);
   const daysBack = (firstDay.getDay() - startOfWeek + 7) % 7;
   const gridStart = new Date(firstDay);
@@ -219,7 +219,7 @@ async function init() {
       const target = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
       const year = target.getFullYear();
       const month = target.getMonth() + 1;
-      const startOfWeek = dm.settings.startOfWeek ?? 1;
+      const startOfWeek = dm.settings.startOfWeek ?? 0;
       const calendarDates = getMonthCalendarDates(year, month, startOfWeek);
 
       // 聚合当月日历格内所有日期的事件

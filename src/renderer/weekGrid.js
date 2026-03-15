@@ -466,7 +466,7 @@ export const WeekGrid = {
     this._renderMonthBody(calendarDates, eventsMap, year, month, selectedDate, callbacks);
   },
 
-  _renderMonthHeader(startOfWeek = 1) {
+  _renderMonthHeader(startOfWeek = 0) {
     const header = document.getElementById('grid-header');
     header.innerHTML = '';
     const ALL_DAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];

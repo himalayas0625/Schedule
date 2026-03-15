@@ -166,7 +166,7 @@ const ALLOWED_STORE_KEYS = [
   'settings.launchAtLogin',
   'settings.windowBounds',
   'settings.customQuotes',
-  'settings.launchAtLogin'
+  'settings._migratedWeekStartV1'
 ];
 
 function isValidStoreKey(key) {
@@ -448,6 +448,12 @@ ipcMain.on('window:updateShortcut', (_e, newShortcut) => {
 });
 
 app.whenReady().then(() => {
+  // ── 一次性迁移：将旧版"周一起始"重置为"周日起始" ───────────────────────────
+  if (!store.get('settings._migratedWeekStartV1')) {
+    store.set('settings.startOfWeek', 0);
+    store.set('settings._migratedWeekStartV1', true);
+  }
+
   // 同步开机自启设置到系统（仅打包后生效，开发模式跳过）
   if (app.isPackaged) {
     const launchAtLogin = store.get('settings.launchAtLogin') ?? false;
