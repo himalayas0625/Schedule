@@ -7,3 +7,6 @@ out/
 .vscode/
 *.log
 待修复bug.md
+settings.local.json
+*.local.json
+.env
