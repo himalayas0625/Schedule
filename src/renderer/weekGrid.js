@@ -417,22 +417,16 @@ export const WeekGrid = {
           e.preventDefault();
           cell.classList.remove('drag-over');
           if (!_dragState) return;
-          const { date: srcDate, timeSlot: srcSlot, index: srcIdx, text, colorType = 0 } = _dragState;
+          const { date: srcDate, timeSlot: srcSlot, index: srcIdx, blockRef, text, colorType = 0 } = _dragState;
           _dragState = null;
           if (srcDate === dateStr && srcSlot === timeSlot) return;
 
           const existingBlocks = cell.querySelectorAll('.event-block');
           if (existingBlocks.length >= 2) return; // 拒绝第三个
 
-          // 清除来源格中被拖动的 block
-          const srcCell = document.querySelector(
-            `.grid-cell[data-date="${srcDate}"][data-time="${srcSlot}"]`
-          );
-          if (srcCell) {
-            const srcBlocks = srcCell.querySelectorAll('.event-block');
-            if (srcBlocks[srcIdx]) {
-              _removeBlock(srcBlocks[srcIdx], srcCell);
-            }
+          // 清除来源格中被拖动的 block（用引用直接定位，避免 index 竞态失效）
+          if (blockRef && blockRef.parentNode) {
+            _removeBlock(blockRef, blockRef.parentNode);
           }
 
           // 添加到目标格
@@ -639,6 +633,7 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
       date: dateStr,
       timeSlot,
       index: parseInt(block.dataset.index),
+      blockRef: block,                       // 直接持有元素引用，避免 index 竞态失效
       text: block.dataset.fullText,
       colorType: parseInt(block.dataset.colorType) || 0
     };
