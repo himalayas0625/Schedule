@@ -383,9 +383,19 @@ export const WeekGrid = {
             cell, '', 0,
             (newText, newColorType) => {
               if (newText) {
-                const block = _makeEventBlock({ text: newText, colorType: newColorType }, 0, cell, dateStr, timeSlot, callbacks);
-                cell.appendChild(block);
-                cell.classList.add('has-event');
+                const existing = cell.querySelector('.event-block');
+                if (existing) {
+                  // 防抖已创建过 block，直接更新避免重复追加
+                  existing.querySelector('.event-text').textContent = newText.split('\n')[0];
+                  existing.title = newText;
+                  existing.dataset.fullText = newText;
+                  _applyCategoryClass(existing, newText);
+                  _applyColorClass(existing, newColorType);
+                } else {
+                  const block = _makeEventBlock({ text: newText, colorType: newColorType }, 0, cell, dateStr, timeSlot, callbacks);
+                  cell.appendChild(block);
+                  cell.classList.add('has-event');
+                }
                 callbacks.onEventChange(dateStr, timeSlot, newText, newColorType);
               }
             }
@@ -581,13 +591,15 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
   block.draggable = true;
   block.dataset.index = idx;
   block.dataset.colorType = colorType;
+  block.dataset.fullText = text;
   _applyCategoryClass(block, text);
   _applyColorClass(block, colorType);
 
   // 用 span 包裹文本，使 text-overflow: ellipsis 在 flex 容器内正确截断
+  // 仅显示第一行，多行内容通过编辑框查看
   const textSpan = document.createElement('span');
   textSpan.className = 'event-text';
-  textSpan.textContent = text;
+  textSpan.textContent = text.split('\n')[0];
   block.appendChild(textSpan);
 
   // 点击 block → 编辑该事件
@@ -595,13 +607,14 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
     e.stopPropagation();
     FloatingEditor.open(
       cell,
-      block.querySelector('.event-text').textContent.trim(),
+      block.dataset.fullText,
       parseInt(block.dataset.colorType) || 0,
       (newText, newColorType) => {
         const currentIdx = parseInt(block.dataset.index);
         if (newText) {
-          block.querySelector('.event-text').textContent = newText;
+          block.querySelector('.event-text').textContent = newText.split('\n')[0];
           block.title = newText;
+          block.dataset.fullText = newText;
           block.dataset.colorType = newColorType;
           _applyCategoryClass(block, newText);
           _applyColorClass(block, newColorType);
@@ -626,7 +639,7 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
       date: dateStr,
       timeSlot,
       index: parseInt(block.dataset.index),
-      text: block.querySelector('.event-text').textContent.trim(),
+      text: block.dataset.fullText,
       colorType: parseInt(block.dataset.colorType) || 0
     };
     e.dataTransfer.effectAllowed = 'move';
