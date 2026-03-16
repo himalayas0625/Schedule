@@ -205,6 +205,9 @@ const FloatingEditor = {
   },
 
   open(cell, currentText, currentColorType, onCommit, onDelete) {
+    // 切换到新 block 前，先保存当前编辑中的内容（避免丢失）
+    this._forceSave();
+
     this._onCommit = onCommit;
     this._onDelete = onDelete || null;
     this._currentCell = cell;
