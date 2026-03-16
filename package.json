@@ -1,6 +1,6 @@
 {
   "name": "screen-schedule",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Desktop floating week schedule overlay",
   "author": "screen-schedule",
   "main": "src/main/main.js",
