@@ -52,7 +52,9 @@
     "publish": {
       "provider": "github",
       "owner": "himalayas0625",
-      "repo": "Schedule"
+      "repo": "Schedule",
+      "draft": false,
+      "releaseType": "release"
     }
   }
 }

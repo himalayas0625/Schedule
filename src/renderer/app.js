@@ -38,6 +38,26 @@ function getWeekDates(offset = 0, startOfWeek = 0) {
   });
 }
 
+// 计算某日期相对于本周的周偏移量（需考虑 startOfWeek 设置）
+function getOffsetForDate(dateStr, todayStr, startOfWeek = 0) {
+  const date = new Date(dateStr + 'T12:00:00');
+  const today = new Date(todayStr + 'T12:00:00');
+
+  // 计算今天的周起始日
+  const todayDay = today.getDay();
+  const todayWeekStart = new Date(today);
+  todayWeekStart.setDate(today.getDate() - (todayDay - startOfWeek + 7) % 7);
+
+  // 计算目标日期的周起始日
+  const dateDay = date.getDay();
+  const dateWeekStart = new Date(date);
+  dateWeekStart.setDate(date.getDate() - (dateDay - startOfWeek + 7) % 7);
+
+  // 计算两个周起始日之间的周数差
+  const diffDays = Math.floor((dateWeekStart - todayWeekStart) / 86400000);
+  return Math.round(diffDays / 7);
+}
+
 // 格式化周范围标签
 function formatWeekLabel(weekDates) {
   const fmt = (s) => {
@@ -264,10 +284,8 @@ async function init() {
       selectedDate = today;
     }
 
-    // 日视图时用 selectedDate 所在周的数据键
-    const dataWeekKey = currentView === 'day'
-      ? getISOWeekKey(new Date(selectedDate + 'T12:00:00'))
-      : weekKey;
+    // 统一使用 weekKey 作为数据源，确保周视图和日视图数据一致
+    const dataWeekKey = weekKey;
     const weekData = dm.getWeekData(dataWeekKey);
 
     // 日视图只传单日，周视图传全周
@@ -287,6 +305,8 @@ async function init() {
       onSelectDate(dateStr) {
         const prevDate = selectedDate;
         selectedDate = dateStr;
+        // 同步 currentOffset，确保切换到日视图时数据一致
+        currentOffset = getOffsetForDate(selectedDate, today, dm.settings.startOfWeek ?? 0);
         if (currentView === 'week') WeekGrid.updateSelectedCol(prevDate, dateStr);
         const notesKey = getISOWeekKey(new Date(dateStr + 'T12:00:00'));
         NotesPanel.render(dm.getNotes(notesKey, dateStr), dateStr, {
@@ -394,6 +414,8 @@ async function init() {
       const d = new Date(selectedDate + 'T12:00:00');
       d.setDate(d.getDate() - 1);
       selectedDate = toLocalDateStr(d);
+      // 同步 currentOffset，确保日视图和周视图数据一致
+      currentOffset = getOffsetForDate(selectedDate, today, dm.settings.startOfWeek ?? 0);
     } else if (currentView === 'month') {
       monthOffset--;
     } else {
@@ -406,6 +428,8 @@ async function init() {
       const d = new Date(selectedDate + 'T12:00:00');
       d.setDate(d.getDate() + 1);
       selectedDate = toLocalDateStr(d);
+      // 同步 currentOffset，确保日视图和周视图数据一致
+      currentOffset = getOffsetForDate(selectedDate, today, dm.settings.startOfWeek ?? 0);
     } else if (currentView === 'month') {
       monthOffset++;
     } else {
