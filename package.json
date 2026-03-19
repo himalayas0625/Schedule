@@ -1,6 +1,6 @@
 {
   "name": "screen-schedule",
-  "version": "1.0.1",
+  "version": "1.0.12",
   "description": "Desktop floating week schedule overlay",
   "author": "screen-schedule",
   "main": "src/main/main.js",
@@ -10,15 +10,24 @@
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "dist": "electron-builder --win --publish never",
-    "release": "electron-builder --win --publish always"
+    "release": "electron-builder --win --publish always",
+    "lint": "eslint src/ -c eslint.config.mjs",
+    "lint:fix": "eslint src/ --fix -c eslint.config.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "electron-store": "^8.2.0",
     "electron-updater": "^6.8.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "electron": "^29.0.0",
-    "electron-builder": "^24.9.0"
+    "electron-builder": "^24.9.0",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "vitest": "^4.0.18"
   },
   "build": {
     "appId": "com.schedule.widget",
@@ -27,7 +36,10 @@
       "output": "dist"
     },
     "extraResources": [
-      { "from": "logo.png", "to": "logo.png" }
+      {
+        "from": "logo.png",
+        "to": "logo.png"
+      }
     ],
     "win": {
       "target": "nsis",
