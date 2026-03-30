@@ -1,6 +1,6 @@
 {
   "name": "screen-schedule",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Desktop floating week schedule overlay",
   "author": "screen-schedule",
   "main": "src/main/main.js",
@@ -35,6 +35,18 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "**/*",
+      "!**/.claude{,/**/*}",
+      "!test{,/**/*}",
+      "!CLAUDE.md",
+      "!PRD.md",
+      "!README.md",
+      "!RELEASE-NOTES.md",
+      "!skills-lock.json",
+      "!vitest.config.js",
+      "!eslint.config.mjs"
+    ],
     "extraResources": [
       {
         "from": "logo.png",
@@ -53,8 +65,10 @@
       "provider": "github",
       "owner": "himalayas0625",
       "repo": "Schedule",
-      "draft": false,
       "releaseType": "release"
+    },
+    "releaseInfo": {
+      "releaseNotesFile": "RELEASE-NOTES.md"
     }
   }
 }

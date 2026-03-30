@@ -1,30 +1,15 @@
-# v1.0.5 Release Notes
+# v1.0.13 Release Notes
 
-## 安全修复
+## 修复
 
-本次更新修复了代码审计发现的高危和中危安全问题：
+- 修复月视图切换到日视图时可能读取错误周数据的问题
+- 统一本地日期与周键计算，避免周日开头场景下的数据错位
+- 为旧版错误周键增加兼容迁移，减少历史数据分桶不一致的问题
+- 保存失败时增加回滚和提示，避免界面已更新但磁盘未落盘的静默丢失
+- 修复天气错误态的重试点击区域
+- 修复笔记面板“今天”判断的时区偏差，并清理重复的 `ResizeObserver`
 
-### 🔒 安全修复项
+## 验证
 
-| 修复项 | 风险等级 | 说明 |
-|-------|----------|------|
-| 移除 HTTP 明文定位 | 🔴 高危 | 移除 `http://ip-api.com` 回退，仅保留 HTTPS 定位服务 |
-| 开启渲染沙箱 | 🟡 中危 | `sandbox: false` → `sandbox: true` |
-| IPC 参数校验 | 🟡 中危 | 添加 store key allowlist、经纬度、快捷键、透明度校验 |
-| 导航拦截 | 🟡 中危 | 添加 `will-navigate` 和 `setWindowOpenHandler` 严格拦截 |
-
-### 🛠 新增工具
-
-- ✅ ESLint 代码检查 (`npm run lint`)
-- ✅ Vitest 单元测试 (`npm run test`)
-- ✅ 安全修复计划和报告文档
-
-### 📋 遗留项
-
-- `store:getAll` 仍暴露完整数据（建议后续最小化）
-- `window:setAlwaysOnTop` 缺少布尔类型校验
-- CSP 仍允许 `unsafe-inline`
-
----
-
-**完整修复报告**: 见 `SECURITY-FIX-REPORT.md`
+- `npm run test`
+- `npm run lint`
