@@ -1,3 +1,5 @@
+import { getTodayStr } from './dateUtils.js';
+
 // 预生成 48 个时间槽字符串
 const TIMES = (() => {
   const slots = [];
@@ -10,12 +12,6 @@ const TIMES = (() => {
 
 const CELL_HEIGHT = 40; // px，必须与 CSS --cell-height 一致
 const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-
-// 动态获取今天的本地日期字符串，避免程序长时间运行后日期不更新
-function getTodayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 let currentRedLineEl = null;
 let redLineTimer = null;

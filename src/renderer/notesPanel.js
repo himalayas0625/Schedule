@@ -1,12 +1,13 @@
-const DAY_NAMES_FULL = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+import { getTodayStr } from './dateUtils.js';
 
-// 动态获取今天的日期字符串，避免程序长时间运行后日期不更新
-function getTodayStr() {
-  return new Date().toISOString().split('T')[0];
-}
+const DAY_NAMES_FULL = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
 // ── 通用渲染函数（左侧和右侧面板共用）────────────────────────────────────────
 function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onChange, logo }) {
+  if (panelEl._resizeObserver) {
+    panelEl._resizeObserver.disconnect();
+    panelEl._resizeObserver = null;
+  }
   panelEl.innerHTML = '';
 
   // ── 应用 Logo（仅左侧面板使用）────────────────────
@@ -42,6 +43,7 @@ function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onCha
   // ── 三条输入 ──────────────────────────────────────
   const list = document.createElement('div');
   list.className = 'notes-list';
+  const autoResizeCallbacks = [];
 
   const data = items ?? ['', '', ''];
 
@@ -66,10 +68,7 @@ function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onCha
       input.style.height = input.scrollHeight + 'px';
     }
     setTimeout(autoResize, 0);
-
-    // 监听面板宽度变化，重新计算高度
-    const resizeObserver = new ResizeObserver(() => autoResize());
-    resizeObserver.observe(panelEl);
+    autoResizeCallbacks.push(autoResize);
 
     // 防抖保存 + 自动调整高度
     let saveTimer = null;
@@ -106,6 +105,12 @@ function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onCha
   });
 
   panelEl.appendChild(list);
+
+  const resizeObserver = new ResizeObserver(() => {
+    autoResizeCallbacks.forEach((callback) => callback());
+  });
+  resizeObserver.observe(panelEl);
+  panelEl._resizeObserver = resizeObserver;
 
   // ── 底部提示 ──────────────────────────────────────
   const footer = document.createElement('div');

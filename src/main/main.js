@@ -395,6 +395,14 @@ ipcMain.handle('store:set', (_e, key, value) => {
   store.set(key, value);
   return true;
 });
+ipcMain.handle('store:delete', (_e, key) => {
+  if (!isValidStoreKey(key)) {
+    console.warn('[security] Invalid store:delete key:', key);
+    return false;
+  }
+  store.delete(key);
+  return true;
+});
 
 // 全局快捷键注册
 function registerShortcut(win) {

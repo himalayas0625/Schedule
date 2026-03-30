@@ -1,62 +1,10 @@
 import { WeekGrid } from './weekGrid.js';
 import { NotesPanel, RightPanel } from './notesPanel.js';
 import { DataManager } from './dataManager.js';
+import { getMonthCalendarDates, getOffsetForDate, getTodayStr, getWeekDates, parseLocalDate, toLocalDateStr } from './dateUtils.js';
 import { WeatherWidget } from './weatherWidget.js';
 
 // ── 工具函数 ──────────────────────────────────────────────────────────────────
-
-// 将 Date 格式化为本地日期字符串（避免 toISOString 的 UTC 偏移问题）
-function toLocalDateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-// 获取 ISO 周字符串 "YYYY-Www"
-function getISOWeekKey(date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-  const year = d.getFullYear();
-  const week1 = new Date(year, 0, 4);
-  const weekNum = 1 + Math.round(
-    ((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
-  );
-  return `${year}-W${String(weekNum).padStart(2, '0')}`;
-}
-
-// 获取某周（含偏移）的 7 个 ISO 日期字符串（周一起始）
-function getWeekDates(offset = 0, startOfWeek = 0) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const day = today.getDay();
-  const diff = (day - startOfWeek + 7) % 7;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - diff + offset * 7);
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return toLocalDateStr(d);
-  });
-}
-
-// 计算某日期相对于本周的周偏移量（需考虑 startOfWeek 设置）
-function getOffsetForDate(dateStr, todayStr, startOfWeek = 0) {
-  const date = new Date(dateStr + 'T12:00:00');
-  const today = new Date(todayStr + 'T12:00:00');
-
-  // 计算今天的周起始日
-  const todayDay = today.getDay();
-  const todayWeekStart = new Date(today);
-  todayWeekStart.setDate(today.getDate() - (todayDay - startOfWeek + 7) % 7);
-
-  // 计算目标日期的周起始日
-  const dateDay = date.getDay();
-  const dateWeekStart = new Date(date);
-  dateWeekStart.setDate(date.getDate() - (dateDay - startOfWeek + 7) % 7);
-
-  // 计算两个周起始日之间的周数差
-  const diffDays = Math.floor((dateWeekStart - todayWeekStart) / 86400000);
-  return Math.round(diffDays / 7);
-}
 
 // 格式化周范围标签
 function formatWeekLabel(weekDates) {
@@ -80,19 +28,6 @@ function formatDayLabel(dateStr) {
   const DAY = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
   const d = new Date(dateStr + 'T12:00:00');
   return `${d.getMonth() + 1}月${d.getDate()}日 ${DAY[d.getDay()]}`;
-}
-
-// 获取月视图日历网格（6×7 = 42 天，startOfWeek 对齐周一/周日）
-function getMonthCalendarDates(year, month, startOfWeek = 0) {
-  const firstDay = new Date(year, month - 1, 1);
-  const daysBack = (firstDay.getDay() - startOfWeek + 7) % 7;
-  const gridStart = new Date(firstDay);
-  gridStart.setDate(firstDay.getDate() - daysBack);
-  return Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(gridStart);
-    d.setDate(gridStart.getDate() + i);
-    return toLocalDateStr(d);
-  });
 }
 
 // ── 农历日期计算（2024-2027 年，含闰月）────────────────────────────────────────
@@ -200,7 +135,7 @@ const EN_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sa
 function updateDayHeaderPill(dateStr, customQuotes = []) {
   const pill = document.getElementById('day-header-pill');
   if (!pill) return;
-  const d = new Date(dateStr + 'T12:00:00');
+  const d = parseLocalDate(dateStr);
   const dow = d.getDay();
   const lunar = getLunarDate(dateStr);
   const yearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
@@ -222,9 +157,8 @@ async function init() {
   const dm = new DataManager();
   await dm.load();
 
-  const today = toLocalDateStr(new Date());
   let currentOffset = 0;                     // 0 = 本周
-  let selectedDate = today;                  // 当前选中列
+  let selectedDate = getTodayStr();          // 当前选中列
   let currentView = 'week';                 // 'week' | 'day' | 'month'
   let monthOffset = 0;                      // 0 = 本月，-1 = 上月，+1 = 下月
 
@@ -245,7 +179,7 @@ async function init() {
       // 聚合当月日历格内所有日期的事件
       const eventsMap = {};
       calendarDates.forEach(dateStr => {
-        const wk = getISOWeekKey(new Date(dateStr + 'T12:00:00'));
+        const wk = dm.getWeekKeyForDate(dateStr, startOfWeek);
         eventsMap[dateStr] = dm.getWeekData(wk).events?.[dateStr] ?? {};
       });
 
@@ -257,6 +191,7 @@ async function init() {
       WeekGrid.renderMonth(calendarDates, eventsMap, year, month, selectedDate, startOfWeek, {
         onSelectDate(dateStr) {
           selectedDate = dateStr;
+          currentOffset = getOffsetForDate(selectedDate, getTodayStr(), startOfWeek);
           currentView = 'day';
           document.querySelectorAll('.pill-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.view === 'day');
@@ -265,11 +200,11 @@ async function init() {
         }
       });
 
-      const notesKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'));
+      const notesKey = dm.getWeekKeyForDate(selectedDate, startOfWeek);
       NotesPanel.render(dm.getNotes(notesKey, selectedDate), selectedDate, {
         onChange(date, idx, val) { dm.setNote(notesKey, date, idx, val); }
       });
-      const dataKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'));
+      const dataKey = dm.getWeekKeyForDate(selectedDate, startOfWeek);
       RightPanel.render(dm.getWeekNotes(dataKey), `${year}年${month}月`, {
         onChange(idx, val) { dm.setWeekNote(dataKey, idx, val); }
       });
@@ -277,11 +212,12 @@ async function init() {
     }
 
     // ── 周 / 日视图 ──────────────────────────────────
-    const weekDates = getWeekDates(currentOffset, dm.settings.startOfWeek ?? 0);
-    const weekKey = getISOWeekKey(new Date(weekDates[0] + 'T12:00:00'));
+    const startOfWeek = dm.settings.startOfWeek ?? 0;
+    const weekDates = getWeekDates(currentOffset, startOfWeek);
+    const weekKey = dm.getWeekKeyForDate(weekDates[0], startOfWeek);
 
     if (currentOffset === 0 && !weekDates.includes(selectedDate)) {
-      selectedDate = today;
+      selectedDate = getTodayStr();
     }
 
     // 统一使用 weekKey 作为数据源，确保周视图和日视图数据一致
@@ -306,9 +242,9 @@ async function init() {
         const prevDate = selectedDate;
         selectedDate = dateStr;
         // 同步 currentOffset，确保切换到日视图时数据一致
-        currentOffset = getOffsetForDate(selectedDate, today, dm.settings.startOfWeek ?? 0);
+        currentOffset = getOffsetForDate(selectedDate, getTodayStr(), startOfWeek);
         if (currentView === 'week') WeekGrid.updateSelectedCol(prevDate, dateStr);
-        const notesKey = getISOWeekKey(new Date(dateStr + 'T12:00:00'));
+        const notesKey = dm.getWeekKeyForDate(dateStr, startOfWeek);
         NotesPanel.render(dm.getNotes(notesKey, dateStr), dateStr, {
           onChange(date, idx, val) {
             dm.setNote(notesKey, date, idx, val);
@@ -338,7 +274,7 @@ async function init() {
     }
 
     // 渲染笔记面板
-    const notesWeekKey = getISOWeekKey(new Date(selectedDate + 'T12:00:00'));
+    const notesWeekKey = dm.getWeekKeyForDate(selectedDate, startOfWeek);
     NotesPanel.render(dm.getNotes(notesWeekKey, selectedDate), selectedDate, {
       onChange(date, idx, val) {
         dm.setNote(notesWeekKey, date, idx, val);
@@ -415,7 +351,7 @@ async function init() {
       d.setDate(d.getDate() - 1);
       selectedDate = toLocalDateStr(d);
       // 同步 currentOffset，确保日视图和周视图数据一致
-      currentOffset = getOffsetForDate(selectedDate, today, dm.settings.startOfWeek ?? 0);
+      currentOffset = getOffsetForDate(selectedDate, getTodayStr(), dm.settings.startOfWeek ?? 0);
     } else if (currentView === 'month') {
       monthOffset--;
     } else {
@@ -429,7 +365,7 @@ async function init() {
       d.setDate(d.getDate() + 1);
       selectedDate = toLocalDateStr(d);
       // 同步 currentOffset，确保日视图和周视图数据一致
-      currentOffset = getOffsetForDate(selectedDate, today, dm.settings.startOfWeek ?? 0);
+      currentOffset = getOffsetForDate(selectedDate, getTodayStr(), dm.settings.startOfWeek ?? 0);
     } else if (currentView === 'month') {
       monthOffset++;
     } else {
@@ -440,7 +376,7 @@ async function init() {
   document.getElementById('btn-week-label').addEventListener('click', () => {
     currentOffset = 0;
     monthOffset = 0;
-    selectedDate = today;
+    selectedDate = getTodayStr();
     render();
   });
 

@@ -66,10 +66,15 @@ function getRetryDelay(retryCount) {
 
 // ── DOM 更新 ─────────────────────────────────────────────────────────────────
 function applyDOM(city, emoji, temp, stateClass) {
+  const weatherEl = document.querySelector('.dhp-weather');
   const cityEl = document.querySelector('.weather-city');
   const iconEl = document.querySelector('.weather-icon');
   const tempEl = document.querySelector('.weather-temp');
 
+  if (weatherEl) {
+    weatherEl.style.cursor = stateClass === 'weather-error' ? 'pointer' : '';
+    weatherEl.title = stateClass === 'weather-error' ? '点击重试' : '';
+  }
   if (cityEl) {
     // 先清空所有状态类
     cityEl.classList.remove('weather-loading', 'weather-error');
@@ -78,16 +83,10 @@ function applyDOM(city, emoji, temp, stateClass) {
 
     if (stateClass === 'weather-loading') {
       cityEl.textContent = '定位中...';
-      cityEl.style.cursor = '';
-      cityEl.title = '';
     } else if (stateClass === 'weather-error') {
       cityEl.textContent = '';
-      cityEl.style.cursor = 'pointer';
-      cityEl.title = '点击重试';
     } else {
       cityEl.textContent = city.replace(/市$/, '');
-      cityEl.style.cursor = '';
-      cityEl.title = '';
     }
   }
   if (iconEl) {
@@ -183,10 +182,10 @@ function bindClickRetry() {
   _clickHandlerBound = true;
 
   document.addEventListener('click', (e) => {
-    // 仅在 ERROR 状态且点击 .weather-city 时响应
+    // 仅在 ERROR 状态且点击天气区域时响应
     if (_state !== STATE.ERROR) return;
-    const cityEl = document.querySelector('.weather-city');
-    if (cityEl && (e.target === cityEl || cityEl.contains(e.target))) {
+    const weatherEl = document.querySelector('.dhp-weather');
+    if (weatherEl && (e.target === weatherEl || weatherEl.contains(e.target))) {
       e.stopPropagation();
       manualRetry();
     }
