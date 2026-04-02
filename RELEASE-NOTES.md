@@ -1,9 +1,5 @@
-# v1.0.14 Release Notes
+# v1.0.16 Release Notes
 
-## 新增
+## 修复
 
-- Windows 安装器改为向导模式，安装时可手动选择安装位置
-
-## 验证
-
-- `npm run dist`
+- 修复托盘图标在 Windows 系统中显示为空白的问题

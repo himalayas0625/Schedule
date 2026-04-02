@@ -474,6 +474,12 @@ app.whenReady().then(() => {
   setupAutoUpdater();
 });
 
+app.on('before-quit', () => {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.forceQuit = true;
+  });
+});
+
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
 });

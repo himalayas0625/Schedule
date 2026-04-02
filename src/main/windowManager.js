@@ -108,6 +108,15 @@ function createWindow(store) {
     }
   });
 
+  // Windows 关机 / 注销时不要再拦截关闭到托盘，否则可能触发原生异常。
+  const markForceQuit = () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.forceQuit = true;
+    }
+  };
+  mainWindow.on('query-session-end', markForceQuit);
+  mainWindow.on('session-end', markForceQuit);
+
   // 窗口显示时通知渲染进程（用于自动聚焦到红线）
   mainWindow.on('show', () => {
     if (!mainWindow.isDestroyed()) {
