@@ -6,7 +6,7 @@ let tray = null;
 function createTray(win, store, checkForUpdates) {
   // 使用 icon.ico 作为托盘图标（Windows 托盘要求 16×16/32×32，.ico 内置多尺寸）
   const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'logo.png')
+    ? path.join(process.resourcesPath, 'icon.ico')
     : path.join(__dirname, '../../assets/icon.ico');
   let icon;
   try {

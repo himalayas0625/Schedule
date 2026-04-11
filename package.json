@@ -51,6 +51,10 @@
       {
         "from": "logo.png",
         "to": "logo.png"
+      },
+      {
+        "from": "assets/icon.ico",
+        "to": "icon.ico"
       }
     ],
     "win": {
