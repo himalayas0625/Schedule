@@ -1,4 +1,4 @@
-const { Tray, Menu, app, nativeImage } = require('electron');
+const { Tray, Menu, app, nativeImage, dialog, shell } = require('electron');
 const path = require('path');
 
 let tray = null;
@@ -73,6 +73,35 @@ function createTray(win, store, checkForUpdates) {
         label: '检查更新...',
         click: () => {
           checkForUpdates && checkForUpdates();
+        }
+      },
+      {
+        label: '开源声明',
+        click: () => {
+          dialog.showMessageBox({
+            type: 'info',
+            title: '开源声明',
+            message: '本软件基于以下开源项目构建',
+            detail: [
+              'Electron  —  MIT License',
+              'Copyright © 2013–present GitHub Inc.',
+              'https://github.com/electron/electron',
+              '',
+              'electron-store  —  MIT License',
+              'Copyright © Sindre Sorhus',
+              'https://github.com/sindresorhus/electron-store',
+              '',
+              'electron-updater  —  MIT License',
+              'Copyright © electron-builder contributors',
+              'https://github.com/electron-userland/electron-builder',
+            ].join('\n'),
+            buttons: ['关闭', '查看 Electron 许可证'],
+            defaultId: 0
+          }).then(({ response }) => {
+            if (response === 1) {
+              shell.openExternal('https://github.com/electron/electron/blob/main/LICENSE');
+            }
+          });
         }
       },
       { type: 'separator' },
