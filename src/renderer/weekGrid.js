@@ -116,13 +116,18 @@ const FloatingEditor = {
 
     this._editor.appendChild(colorRow);
 
-    // 键盘事件：仅保留 Esc 取消
+    // 键盘事件
     this._textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this._cancelAndClose();
         e.preventDefault();
+      } else if (e.key === 'Enter' && !e.shiftKey) {
+        // Enter → 保存并关闭
+        e.preventDefault();
+        this._forceSave();
+        this.close();
       }
-      // Enter 键原生换行，不再拦截
+      // Shift+Enter → 原生换行，不拦截
     });
 
     // 右键菜单
