@@ -3,156 +3,6 @@ const { createWindow, getMainWindow } = require('./windowManager');
 const { createTray } = require('./tray');
 const store = require('./store');
 const { autoUpdater } = require('electron-updater');
-const https = require('https');
-const http  = require('http');
-
-// ── 主进程 HTTP 工具（无 CORS / CSP 限制）────────────────────────────────────
-function httpGet(url, options = {}) {
-  const lib = url.startsWith('https:') ? https : http;
-  return new Promise((resolve, reject) => {
-    let settled = false;  // 防止重复 settle
-    const req = lib.get(url, { timeout: options.timeout || 8000 }, (res) => {
-      if (settled) return;
-      if (res.statusCode !== 200) {
-        settled = true;
-        res.resume();
-        return reject(new Error(`HTTP ${res.statusCode}`));
-      }
-      let raw = '';
-      res.on('data', d => { raw += d; });
-      res.on('end', () => {
-        if (settled) return;
-        settled = true;
-        try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
-      });
-    });
-    req.on('error', (e) => {
-      if (settled) return;
-      settled = true;
-      reject(e);
-    });
-    req.on('timeout', () => {
-      if (settled) return;
-      settled = true;
-      req.destroy();
-      reject(new Error('timeout'));
-    });
-    // AbortController 支持（once: true 避免监听器累积）
-    if (options.signal) {
-      options.signal.addEventListener('abort', () => {
-        if (settled) return;
-        settled = true;
-        req.destroy();
-        reject(new Error('aborted'));
-      }, { once: true });
-    }
-  });
-}
-
-// ── 错误类型枚举映射（脱敏）─────────────────────────────────────────────────
-const ERROR_TYPE_MAP = {
-  'timeout': 'timeout',
-  'aborted': 'aborted',
-  'ECONNREFUSED': 'network',
-  'ENOTFOUND': 'network',
-  'ETIMEDOUT': 'timeout',
-  'ECONNRESET': 'network',
-  'invalid response': 'parse'
-};
-
-function mapErrorType(err) {
-  const msg = err?.message || '';
-  // 优先匹配已知模式
-  for (const [pattern, type] of Object.entries(ERROR_TYPE_MAP)) {
-    if (msg.includes(pattern)) return type;
-  }
-  // HTTP 状态码
-  if (msg.startsWith('HTTP ')) return 'http_error';
-  // 默认
-  return 'unknown';
-}
-
-// ── 脱敏日志（固定字段白名单）─────────────────────────────────────────────────
-function logLocation(service, status, errorType, ms) {
-  console.log(JSON.stringify({
-    module: 'locate',
-    service,
-    status,
-    errorType,
-    ms
-  }));
-}
-
-// ── 并发定位服务（Promise.any + AbortController）───────────────────────────────
-const LOCATION_TIMEOUT = 5000; // 总预算 5 秒
-
-async function fetchIpapi(signal) {
-  const t0 = Date.now();
-  try {
-    const d = await httpGet('https://ipapi.co/json/', { timeout: 4000, signal });
-    // 显式校验（避免 truthy 判断导致纬度 0 被误判）
-    if (Number.isFinite(d.latitude) && Number.isFinite(d.longitude) && !d.error) {
-      logLocation('ipapi', 'success', null, Date.now() - t0);
-      return { city: d.city || '', lat: d.latitude, lon: d.longitude, _service: 'ipapi' };
-    }
-    throw new Error('invalid response');
-  } catch (e) {
-    logLocation('ipapi', 'fail', mapErrorType(e), Date.now() - t0);
-    throw e;
-  }
-}
-
-async function fetchIpinfo(signal) {
-  const t0 = Date.now();
-  try {
-    const d = await httpGet('https://ipinfo.io/json', { timeout: 4000, signal });
-    // ipinfo 返回 "lat,lon" 字符串
-    if (d.loc && typeof d.loc === 'string') {
-      const [latStr, lonStr] = d.loc.split(',');
-      const lat = parseFloat(latStr);
-      const lon = parseFloat(lonStr);
-      if (Number.isFinite(lat) && Number.isFinite(lon)) {
-        logLocation('ipinfo', 'success', null, Date.now() - t0);
-        return { city: d.city || '', lat, lon, _service: 'ipinfo' };
-      }
-    }
-    throw new Error('invalid response');
-  } catch (e) {
-    logLocation('ipinfo', 'fail', mapErrorType(e), Date.now() - t0);
-    throw e;
-  }
-}
-
-async function locateWithFallback() {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), LOCATION_TIMEOUT);
-  const signal = controller.signal;
-
-  const services = [
-    { name: 'ipapi', fn: () => fetchIpapi(signal) },
-    { name: 'ipinfo', fn: () => fetchIpinfo(signal) }
-  ];
-
-  try {
-    // Promise.any: 首个成功即返回
-    const result = await Promise.any(services.map(s => s.fn()));
-    clearTimeout(timeoutId);
-    return { ok: true, city: result.city, lat: result.lat, lon: result.lon };
-  } catch (aggregate) {
-    clearTimeout(timeoutId);
-    // 显式处理 AggregateError（Promise.any 全失败时抛出）
-    let errorSummary = 'all_failed';
-    if (aggregate instanceof AggregateError && aggregate.errors) {
-      const types = aggregate.errors.map(e => mapErrorType(e));
-      // 去重后输出
-      errorSummary = [...new Set(types)].join(',');
-    }
-    logLocation('fallback', 'fail', errorSummary, LOCATION_TIMEOUT);
-    return { ok: false, error: 'location failed' };
-  } finally {
-    controller.abort(); // 确保取消所有未完成请求
-  }
-}
 
 // ── IPC 参数校验（显式 allowlist）─────────────────────────────────────────────
 const ALLOWED_STORE_KEYS = [
@@ -166,7 +16,8 @@ const ALLOWED_STORE_KEYS = [
   'settings.launchAtLogin',
   'settings.windowBounds',
   'settings.customQuotes',
-  'settings._migratedWeekStartV1'
+  'settings._migratedWeekStartV1',
+  'settings.privacyAcceptedVersion'
 ];
 
 function isValidStoreKey(key) {
@@ -181,9 +32,6 @@ function isValidStoreKey(key) {
 const validate = {
   // 透明度：0.2 ~ 1.0
   opacity: (val) => typeof val === 'number' && Number.isFinite(val) && val >= 0.2 && val <= 1,
-  // 经纬度校验
-  latitude: (val) => typeof val === 'number' && Number.isFinite(val) && val >= -90 && val <= 90,
-  longitude: (val) => typeof val === 'number' && Number.isFinite(val) && val >= -180 && val <= 180,
   // 快捷键校验（支持 Alt+Space、Ctrl+Shift+A 等格式）
   shortcut: (val) => {
     if (typeof val !== 'string') return false;
@@ -201,28 +49,6 @@ const validate = {
   // 布尔值
   boolean: (val) => typeof val === 'boolean'
 };
-
-// ── 天气 IPC ─────────────────────────────────────────────────────────────────
-
-// 定位：并发 fallback（ipapi → ipinfo）
-ipcMain.handle('weather:locate', async () => {
-  return await locateWithFallback();
-});
-
-// 天气预报：添加经纬度校验
-ipcMain.handle('weather:forecast', async (_e, lat, lon) => {
-  // 校验经纬度
-  if (!validate.latitude(lat) || !validate.longitude(lon)) {
-    return { ok: false, error: 'invalid coordinates' };
-  }
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`;
-    const d = await httpGet(url);
-    return { ok: true, temp: Math.round(d.current.temperature_2m), code: d.current.weather_code };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
-});
 
 // ── 自动更新（仅生产环境） ────────────────────────────────────
 let lastCheckTime = 0;
@@ -283,12 +109,16 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('error', (err) => {
+    // 自动检查失败静默处理，不打扰用户（GitHub 在国内网络下可能超时）
     console.error('[updater] 更新检查失败:', err.message);
   });
 
   // 启动后延迟 10s 检查，避免与主窗口初始化竞争
+  // .catch() 兜底：防止 Promise 拒绝冒泡为未处理异常，触发系统错误弹窗
   setTimeout(() => {
-    autoUpdater.checkForUpdates();
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.error('[updater] 自动检查异常:', err.message);
+    });
     lastCheckTime = Date.now();
   }, 10_000);
 }
@@ -472,6 +302,11 @@ app.whenReady().then(() => {
   createTray(win, store, checkForUpdates);
   registerShortcut(win);
   setupAutoUpdater();
+});
+
+// 隐私说明"不同意"时完整退出
+ipcMain.on('app:quit', () => {
+  app.exit(0);
 });
 
 app.on('before-quit', () => {
