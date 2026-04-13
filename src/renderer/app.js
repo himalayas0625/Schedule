@@ -160,6 +160,60 @@ function updateDayHeaderPill(dateStr, customQuotes = []) {
   pill.querySelector('.dhp-secondary').textContent = quote;
 }
 
+// ── 激活码验证弹窗 ────────────────────────────────────────────────────────────
+async function showActivationModalIfNeeded() {
+  const activated = await window.electronAPI.getLicenseStatus();
+  if (activated) return;
+
+  return new Promise((resolve) => {
+    const modal   = document.getElementById('activation-modal');
+    const input   = document.getElementById('license-key-input');
+    const errMsg  = document.getElementById('license-error');
+    const btn     = document.getElementById('license-activate-btn');
+    const quitBtn = document.getElementById('license-quit-btn');
+    modal.classList.add('visible');
+    input.focus();
+
+    // 自动格式化：精确过滤字符集，退格时修正光标位置
+    input.addEventListener('input', () => {
+      const pos = input.selectionStart;
+      const raw = input.value
+        .replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/gi, '')
+        .toUpperCase()
+        .slice(0, 20);
+      const formatted = (raw.match(/.{1,5}/g) || []).join('-');
+      if (input.value !== formatted) {
+        input.value = formatted;
+        // 光标补偿：计算新位置前已有多少连字符
+        const dashes = (formatted.slice(0, pos).match(/-/g) || []).length;
+        input.setSelectionRange(pos + dashes, pos + dashes);
+      }
+      errMsg.classList.remove('visible');
+    });
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const valid = await window.electronAPI.validateLicense(input.value);
+      btn.disabled = false;
+      if (valid) {
+        modal.classList.remove('visible');
+        resolve();
+      } else {
+        errMsg.classList.add('visible');
+        input.focus();
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btn.click();
+    });
+
+    quitBtn.addEventListener('click', () => {
+      window.electronAPI.quitApp();
+    }, { once: true });
+  });
+}
+
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
 const PRIVACY_VERSION = '1.1';
 
@@ -190,6 +244,9 @@ async function init() {
 
   // ── 隐私说明（首次启动或版本更新时弹出）─────────────────
   await showPrivacyNoticeIfNeeded(dm.settings.privacyAcceptedVersion || '');
+
+  // ── 激活码验证（隐私同意后执行）──────────────────────────
+  await showActivationModalIfNeeded();
 
   let currentOffset = 0;                     // 0 = 本周
   let selectedDate = getTodayStr();          // 当前选中列

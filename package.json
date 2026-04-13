@@ -39,6 +39,7 @@
       "**/*",
       "!**/.claude{,/**/*}",
       "!test{,/**/*}",
+      "!scripts{,/**/*}",
       "!CLAUDE.md",
       "!PRD.md",
       "!README.md",

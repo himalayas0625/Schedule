@@ -3,6 +3,7 @@ const { createWindow, getMainWindow } = require('./windowManager');
 const { createTray } = require('./tray');
 const store = require('./store');
 const { autoUpdater } = require('electron-updater');
+const { validateLicenseKey } = require('./license');
 
 // ── IPC 参数校验（显式 allowlist）─────────────────────────────────────────────
 const ALLOWED_STORE_KEYS = [
@@ -195,6 +196,18 @@ if (!app.requestSingleInstanceLock()) {
 app.on('second-instance', () => {
   const win = getMainWindow();
   if (win) { win.show(); win.focus(); }
+});
+
+// IPC - License Key 验证
+ipcMain.handle('license:validate', (_e, key) => {
+  const valid = validateLicenseKey(key);
+  if (valid) store.set('settings.licenseKey', key.replace(/-/g, '').toUpperCase());
+  return valid;
+});
+
+ipcMain.handle('license:getStatus', () => {
+  const key = store.get('settings.licenseKey') || '';
+  return validateLicenseKey(key);
 });
 
 // IPC - 数据存储（添加校验）

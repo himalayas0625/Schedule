@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send('window:maximize'),
   show: () => ipcRenderer.send('window:show'),
   close: () => ipcRenderer.send('window:close'),
+  quitApp: () => ipcRenderer.send('app:quit'),
   onMaximizeChange: (callback) => {
     ipcRenderer.on('window:maximizeChanged', (_e, isMaximized) => callback(isMaximized));
   },
@@ -35,12 +36,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('window:shown', () => callback());
   },
 
-  // 天气（由主进程发起 HTTP，绕过渲染进程 CSP/CORS 限制）
-  weatherLocate:   ()          => ipcRenderer.invoke('weather:locate'),
-  weatherForecast: (lat, lon)  => ipcRenderer.invoke('weather:forecast', lat, lon),
-
   // 名言编辑
   onQuotesEdit: (callback) => {
     ipcRenderer.on('quotes:edit', () => callback());
-  }
+  },
+
+  // License Key 授权
+  validateLicense: (key) => ipcRenderer.invoke('license:validate', key),
+  getLicenseStatus: () => ipcRenderer.invoke('license:getStatus')
 });

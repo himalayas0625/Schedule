@@ -146,3 +146,207 @@ button {
   color: var(--text-primary);
   font-family: inherit;
 }
+
+/* ── 隐私说明弹窗 ─────────────────────────────────────────── */
+#privacy-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+#privacy-modal.visible {
+  display: flex;
+}
+
+.privacy-modal-content {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 28px 32px 24px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.privacy-modal-header {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.privacy-modal-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.privacy-modal-body p {
+  margin: 0 0 10px;
+}
+
+.privacy-modal-body ul {
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.privacy-modal-body li {
+  margin-bottom: 6px;
+}
+
+.privacy-version {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 14px !important;
+}
+
+.privacy-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.privacy-btn-primary {
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.privacy-btn-primary:hover {
+  opacity: 0.85;
+}
+
+.privacy-btn-secondary {
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 8px;
+  font-size: 13px;
+  transition: color 0.15s;
+}
+
+.privacy-btn-secondary:hover {
+  color: var(--text-secondary);
+}
+
+/* ── 激活码弹窗 ──────────────────────────────────────────── */
+#activation-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10001; /* 高于 privacy-modal(9999)，确保始终在最顶层 */
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+#activation-modal.visible {
+  display: flex;
+}
+
+.activation-modal-content {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 28px 32px 24px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.activation-modal-header {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.activation-modal-body {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.activation-modal-body p {
+  margin: 0 0 10px;
+}
+
+#license-key-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 2px;
+  text-align: center;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#license-key-input:focus {
+  border-color: var(--accent);
+}
+
+.license-error {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #e05c5c;
+  visibility: hidden;
+}
+
+.license-error.visible {
+  visibility: visible;
+}
+
+.activation-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.activation-btn-primary {
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.activation-btn-primary:hover {
+  opacity: 0.85;
+}
+
+.activation-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activation-btn-secondary {
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 8px;
+  font-size: 13px;
+  transition: color 0.15s;
+}
+
+.activation-btn-secondary:hover {
+  color: var(--text-primary);
+}
+

@@ -93,6 +93,24 @@
   <!-- 右下角缩放手柄 -->
   <div id="resize-handle" title="拖拽调整窗口大小"></div>
 
+  <!-- 激活码弹窗（未激活时显示，位于隐私弹窗之上） -->
+  <div id="activation-modal">
+    <div class="activation-modal-content">
+      <div class="activation-modal-header">激活屏幕日程</div>
+      <div class="activation-modal-body">
+        <p>请输入购买时获得的激活码：</p>
+        <input id="license-key-input" type="text"
+               placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+               maxlength="23" autocomplete="off" spellcheck="false">
+        <p id="license-error" class="license-error">激活码无效，请检查后重试。</p>
+      </div>
+      <div class="activation-modal-footer">
+        <button id="license-quit-btn" class="activation-btn-secondary">退出程序</button>
+        <button id="license-activate-btn" class="activation-btn-primary">激 活</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 隐私说明弹窗（首次启动） -->
   <div id="privacy-modal">
     <div class="privacy-modal-content">

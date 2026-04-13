@@ -14,7 +14,9 @@ const schema = {
       theme: 'system',
       backgroundBlur: true,
       shortcut: 'Alt+Space',
-      launchAtLogin: false
+      launchAtLogin: false,
+      privacyAcceptedVersion: '',
+      licenseKey: ''
     }
   }
 };
