@@ -2,7 +2,6 @@ import { WeekGrid } from './weekGrid.js';
 import { NotesPanel, RightPanel } from './notesPanel.js';
 import { DataManager } from './dataManager.js';
 import { getMonthCalendarDates, getOffsetForDate, getTodayStr, getWeekDates, parseLocalDate, toLocalDateStr } from './dateUtils.js';
-import { WeatherWidget } from './weatherWidget.js';
 
 // ── 工具函数 ──────────────────────────────────────────────────────────────────
 
@@ -83,32 +82,41 @@ const DAILY_QUOTES = [
   '不抵抗命运，而是接纳它',
   '最大的自由，是选择如何看待已发生之事',
   '什么都不想要，才能拥有一切',
-  // 加缪
-  '宇宙对你的漠然，正是你自由的证明',
-  '荒谬不消除，就带着它活下去',
-  '我反抗，故我存在',
-  '重要的不是治愈，而是带着病痛活着',
-  // 尼采
-  '凡杀不死我的，使我更强大',
-  '当你凝视深渊，深渊也在凝视你',
-  '一个人知道自己为何而活，便能忍受任何生活',
-  // 卡夫卡
-  '不要写你想写的，写你无法不写的',
-  '书是斧头，劈开我们心中冰封的海',
-  '一切深刻的东西都喜欢戴上面具',
-  // 里尔克
-  '未曾哭过长夜的人，不足以语人生',
-  '去爱一件事，便是接受它会消逝',
-  '孤独是我唯一忠实的伴侣',
-  // 博尔赫斯
-  '不必跑得太快，路本来就在那里',
-  '孤独的人有自己的神话',
-  // 布莱克
-  '把沙粒看成世界，把野花看成天堂',
-  // 卢梭
-  '人生而自由，却无往不在枷锁之中',
-  // 沈从文
-  '慢慢走，欣赏啊',
+  // 屈原·楚辞
+  '路漫漫其修远兮，吾将上下而求索',
+  // 易经
+  '天行健，君子以自强不息',
+  // 荀子
+  '不积跬步，无以至千里',
+  '锲而不舍，金石可镂',
+  // 孟子
+  '生于忧患，死于安乐',
+  // 中庸
+  '博学之，审问之，慎思之，明辨之，笃行之',
+  // 大学
+  '苟日新，日日新，又日新',
+  // 礼记
+  '玉不琢，不成器；人不学，不知道',
+  // 论语
+  '知之者不如好之者，好之者不如乐之者',
+  // 陶渊明（365—427）
+  '采菊东篱下，悠然见南山',
+  // 王维（699—759）
+  '行到水穷处，坐看云起时',
+  // 杜甫（712—770）
+  '会当凌绝顶，一览众山小',
+  // 王勃（649—676）
+  '海内存知己，天涯若比邻',
+  // 朱熹（1130—1200）
+  '问渠那得清如许，为有源头活水来',
+  // 陆游（1125—1210）
+  '纸上得来终觉浅，绝知此事要躬行',
+  '山重水复疑无路，柳暗花明又一村',
+  // 苏轼（1037—1101）
+  '横看成岭侧成峰，远近高低各不同',
+  '但愿人长久，千里共婵娟',
+  // 郑板桥（1693—1765）
+  '千磨万击还坚劲，任尔东西南北风',
   // 禅意
   '留白处，才是真正的画',
   '走得太快，灵魂会跟不上',
@@ -153,9 +161,35 @@ function updateDayHeaderPill(dateStr, customQuotes = []) {
 }
 
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
+const PRIVACY_VERSION = '1.1';
+
+// 若用户尚未接受当前版本的隐私说明，则显示弹窗并等待用户操作
+function showPrivacyNoticeIfNeeded(acceptedVersion) {
+  if (acceptedVersion === PRIVACY_VERSION) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const modal = document.getElementById('privacy-modal');
+    modal.classList.add('visible');
+
+    document.getElementById('privacy-accept-btn').addEventListener('click', async () => {
+      modal.classList.remove('visible');
+      await window.electronAPI.set('settings.privacyAcceptedVersion', PRIVACY_VERSION);
+      resolve();
+    }, { once: true });
+
+    document.getElementById('privacy-reject-btn').addEventListener('click', () => {
+      // 用户不同意：完全退出程序
+      window.electronAPI.quitApp();
+    }, { once: true });
+  });
+}
+
 async function init() {
   const dm = new DataManager();
   await dm.load();
+
+  // ── 隐私说明（首次启动或版本更新时弹出）─────────────────
+  await showPrivacyNoticeIfNeeded(dm.settings.privacyAcceptedVersion || '');
 
   let currentOffset = 0;                     // 0 = 本周
   let selectedDate = getTodayStr();          // 当前选中列
@@ -163,7 +197,6 @@ async function init() {
   let monthOffset = 0;                      // 0 = 本月，-1 = 上月，+1 = 下月
 
   WeekGrid.init();
-  WeatherWidget.init();   // 启动即缓存渲染，异步刷新，1h 静默更新
 
   // ── 渲染函数 ────────────────────────────────────────
   function render() {
