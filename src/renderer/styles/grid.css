@@ -796,42 +796,6 @@
   gap: 2px;
 }
 
-/* 天气 — 第一层级（主），字重 600 突显 */
-.dhp-weather {
-  display: flex;
-  align-items: flex-start;  /* 城市名上边缘与图标上边缘对齐 */
-  gap: 3px;
-  white-space: nowrap;
-  line-height: 1.1;
-  transform: translateY(1px);  /* 整体下移 1px，远离上边缘 */
-}
-
-.weather-city {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  opacity: 0.9;
-  line-height: 1.1;
-}
-
-.weather-icon {
-  font-size: 13px;
-  line-height: 1.1;
-}
-
-.weather-temp {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  opacity: 0.9;
-  line-height: 1.1;
-}
-
-[data-theme="light"] .weather-city,
-[data-theme="light"] .weather-temp {
-  color: var(--text-primary);
-  opacity: 0.85;
-}
 
 
 
