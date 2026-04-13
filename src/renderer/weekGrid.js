@@ -77,6 +77,10 @@ const FloatingEditor = {
     // 颜色选择器
     const colorRow = document.createElement('div');
     colorRow.className = 'editor-color-row';
+
+    // 颜色圆点组（靠左）
+    const dotsGroup = document.createElement('div');
+    dotsGroup.className = 'editor-dots-group';
     const colorConfigs = [
       { type: 0, color: '#6E8EA1', title: '蓝色' },
       { type: 1, color: '#BC7E79', title: '红色' },
@@ -94,9 +98,22 @@ const FloatingEditor = {
         this._updateDots();
         this._scheduleSave(); // 颜色变更也触发保存
       });
-      colorRow.appendChild(dot);
+      dotsGroup.appendChild(dot);
       this._colorDots.push(dot);
     });
+    colorRow.appendChild(dotsGroup);
+
+    // 保存按钮（靠右）
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'editor-save-btn';
+    saveBtn.textContent = '保存';
+    saveBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      this._forceSave();
+      this.close();
+    });
+    colorRow.appendChild(saveBtn);
+
     this._editor.appendChild(colorRow);
 
     // 键盘事件：仅保留 Esc 取消
