@@ -5,6 +5,10 @@ const schema = {
     type: 'object',
     default: {}
   },
+  months: {
+    type: 'object',
+    default: {}
+  },
   settings: {
     type: 'object',
     default: {

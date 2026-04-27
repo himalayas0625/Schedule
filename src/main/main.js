@@ -27,6 +27,8 @@ function isValidStoreKey(key) {
   if (ALLOWED_STORE_KEYS.includes(key)) return true;
   // weeks 键格式：YYYY-Wnn（如 2024-W01）
   if (/^weeks\.(\d{4})-W(0[1-9]|[1-4]\d|5[0-3])$/.test(key)) return true;
+  // months 键格式：YYYY-MM（如 2026-04）
+  if (/^months\.\d{4}-(0[1-9]|1[0-2])$/.test(key)) return true;
   return false;
 }
 

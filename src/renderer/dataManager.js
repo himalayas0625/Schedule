@@ -12,6 +12,7 @@ export class DataManager {
     this._data = await window.electronAPI.getAll();
     if (!this._data.weeks) this._data.weeks = {};
     if (!this._data.settings) this._data.settings = {};
+    if (!this._data.months) this._data.months = {};
   }
 
   get settings() {
@@ -121,6 +122,35 @@ export class DataManager {
     }
     this._data.weeks[weekKey].weekNotes[index] = value;
     return await this._persistWeek(weekKey, previousWeekData);
+  }
+
+  // ── 本月重点（右侧面板，按月存储）────────────────────
+  getMonthNotes(monthKey) {
+    return this._data.months?.[monthKey] ?? ['', '', ''];
+  }
+
+  async setMonthNote(monthKey, index, value) {
+    if (!this._data.months) this._data.months = {};
+    const prev = this._data.months[monthKey] ? [...this._data.months[monthKey]] : null;
+    if (!this._data.months[monthKey]) {
+      this._data.months[monthKey] = ['', '', ''];
+    }
+    this._data.months[monthKey][index] = value;
+    try {
+      const saved = await window.electronAPI.set(`months.${monthKey}`, this._data.months[monthKey]);
+      if (saved === false) {
+        if (prev) this._data.months[monthKey] = prev;
+        else delete this._data.months[monthKey];
+        this._notifySaveFailure('本月重点保存失败，未写入磁盘。');
+        return false;
+      }
+      return true;
+    } catch {
+      if (prev) this._data.months[monthKey] = prev;
+      else delete this._data.months[monthKey];
+      this._notifySaveFailure('本月重点保存失败，未写入磁盘。');
+      return false;
+    }
   }
 
   // ── 笔记 ──────────────────────────────────────────

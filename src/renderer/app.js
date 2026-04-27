@@ -22,6 +22,17 @@ function formatWeekLabel(weekDates) {
   return `${first.getMonth() + 1}月${first.getDate()}–${last.getDate()}日 ${first.getFullYear()}`;
 }
 
+// 从日期字符串提取月份 key（YYYY-MM）和标签（YYYY年M月）
+function getMonthKey(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonthLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+}
+
 // 格式化日标签（日视图标题栏）
 function formatDayLabel(dateStr) {
   const DAY = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -290,9 +301,10 @@ async function init() {
         }
       });
 
-      const notesKey = dm.getWeekKeyForDate(selectedDate, startOfWeek);
-      NotesPanel.render(dm.getNotes(notesKey, selectedDate), selectedDate, {
-        onChange(date, idx, val) { dm.setNote(notesKey, date, idx, val); }
+      const monthKey = getMonthKey(selectedDate);
+      const monthLabel = formatMonthLabel(selectedDate);
+      NotesPanel.render(dm.getMonthNotes(monthKey), monthLabel, {
+        onChange(idx, val) { dm.setMonthNote(monthKey, idx, val); }
       });
       const dataKey = dm.getWeekKeyForDate(selectedDate, startOfWeek);
       RightPanel.render(dm.getWeekNotes(dataKey), `${year}年${month}月`, {
@@ -334,10 +346,11 @@ async function init() {
         // 同步 currentOffset，确保切换到日视图时数据一致
         currentOffset = getOffsetForDate(selectedDate, getTodayStr(), startOfWeek);
         if (currentView === 'week') WeekGrid.updateSelectedCol(prevDate, dateStr);
-        const notesKey = dm.getWeekKeyForDate(dateStr, startOfWeek);
-        NotesPanel.render(dm.getNotes(notesKey, dateStr), dateStr, {
-          onChange(date, idx, val) {
-            dm.setNote(notesKey, date, idx, val);
+        const colMonthKey = getMonthKey(dateStr);
+        const colMonthLabel = formatMonthLabel(dateStr);
+        NotesPanel.render(dm.getMonthNotes(colMonthKey), colMonthLabel, {
+          onChange(idx, val) {
+            dm.setMonthNote(colMonthKey, idx, val);
           }
         });
       },
@@ -363,15 +376,16 @@ async function init() {
       updateDayHeaderPill(selectedDate, dm.settings.customQuotes || []);
     }
 
-    // 渲染笔记面板
-    const notesWeekKey = dm.getWeekKeyForDate(selectedDate, startOfWeek);
-    NotesPanel.render(dm.getNotes(notesWeekKey, selectedDate), selectedDate, {
-      onChange(date, idx, val) {
-        dm.setNote(notesWeekKey, date, idx, val);
+    // 渲染右侧"本月重点"面板
+    const selMonthKey = getMonthKey(selectedDate);
+    const selMonthLabel = formatMonthLabel(selectedDate);
+    NotesPanel.render(dm.getMonthNotes(selMonthKey), selMonthLabel, {
+      onChange(idx, val) {
+        dm.setMonthNote(selMonthKey, idx, val);
       }
     });
 
-    // 渲染右侧"本周重点"面板
+    // 渲染左侧"本周重点"面板
     RightPanel.render(dm.getWeekNotes(dataWeekKey), formatWeekLabel(weekDates), {
       onChange(idx, val) {
         dm.setWeekNote(dataWeekKey, idx, val);

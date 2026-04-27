@@ -119,23 +119,22 @@ function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onCha
   panelEl.appendChild(footer);
 }
 
-// ── 左侧日记面板（按日） ───────────────────────────────────────────────────────
+// ── 右侧月重点面板（按月） ────────────────────────────────────────────────────
 export const NotesPanel = {
-  render(notesData, selectedDate, callbacks) {
+  render(monthNotesData, monthLabel, callbacks) {
     const panel = document.getElementById('right-panel');
-    const date = new Date(selectedDate + 'T12:00:00');
-    const isToday = selectedDate === getTodayStr();
-    const dayName = DAY_NAMES_FULL[date.getDay()];
-    const monthDay = `${date.getMonth() + 1}月${date.getDate()}日`;
+    const todayD = new Date(getTodayStr() + 'T12:00:00');
+    const currentMonthLabel = `${todayD.getFullYear()}年${todayD.getMonth() + 1}月`;
+    const isCurrentMonth = monthLabel === currentMonthLabel;
 
     renderTo(panel, {
-      items: notesData,
-      title: `${monthDay} ${dayName}`,
-      sub: isToday ? '今日重点' : '当日重点',
-      isHighlight: isToday,
+      items: monthNotesData,
+      title: monthLabel,
+      sub: '本月重点',
+      isHighlight: isCurrentMonth,
       placeholders: ['第一件事', '第二件事', '第三件事'],
       onChange(index, val) {
-        callbacks.onChange(selectedDate, index, val);
+        callbacks.onChange(index, val);
       }
     });
   }
