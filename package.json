@@ -74,9 +74,10 @@
       "provider": "github",
       "owner": "himalayas0625",
       "repo": "Schedule",
-      "draft": false,
-      "releaseType": "release",
-      "releaseNotes": "file:RELEASE-NOTES.md"
+      "releaseType": "release"
+    },
+    "releaseInfo": {
+      "releaseNotesFile": "RELEASE-NOTES.md"
     }
   }
 }
