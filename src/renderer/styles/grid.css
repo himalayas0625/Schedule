@@ -586,10 +586,17 @@
 .editor-color-row {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 6px;
   padding: 2px 0;
+}
+
+/* 颜色圆点组（靠左） */
+.editor-dots-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .color-dot {
@@ -611,6 +618,33 @@
 
 .color-dot.active {
   opacity: 1;
+}
+
+/* 保存按钮（浮动编辑框底部右侧） */
+.editor-save-btn {
+  font-size: 10px;
+  font-family: inherit;
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.editor-save-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.editor-save-btn.saved {
+  background: #5CB97A;
+  color: #fff;
+  border-color: #5CB97A;
 }
 
 /* ── 日视图：隐藏原表头（由 pill 替代），单列撑满 ─────── */
@@ -762,42 +796,6 @@
   gap: 2px;
 }
 
-/* 天气 — 第一层级（主），字重 600 突显 */
-.dhp-weather {
-  display: flex;
-  align-items: flex-start;  /* 城市名上边缘与图标上边缘对齐 */
-  gap: 3px;
-  white-space: nowrap;
-  line-height: 1.1;
-  transform: translateY(1px);  /* 整体下移 1px，远离上边缘 */
-}
-
-.weather-city {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  opacity: 0.9;
-  line-height: 1.1;
-}
-
-.weather-icon {
-  font-size: 13px;
-  line-height: 1.1;
-}
-
-.weather-temp {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  opacity: 0.9;
-  line-height: 1.1;
-}
-
-[data-theme="light"] .weather-city,
-[data-theme="light"] .weather-temp {
-  color: var(--text-primary);
-  opacity: 0.85;
-}
 
 
 

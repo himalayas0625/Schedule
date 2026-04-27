@@ -1,7 +1,11 @@
-const Store = require('electron-store')
+const Store = require('electron-store');
 
 const schema = {
   weeks: {
+    type: 'object',
+    default: {}
+  },
+  months: {
     type: 'object',
     default: {}
   },
@@ -10,14 +14,16 @@ const schema = {
     default: {
       alwaysOnTop: true,
       opacity: 0.95,
-      startOfWeek: 1,
+      startOfWeek: 0,
       theme: 'system',
       backgroundBlur: true,
       shortcut: 'Alt+Space',
-      launchAtLogin: false
+      launchAtLogin: false,
+      privacyAcceptedVersion: '',
+      licenseKey: ''
     }
   }
-}
+};
 
-const store = new Store({ schema, name: 'schedule-data' })
-module.exports = store
+const store = new Store({ schema, name: 'schedule-data' });
+module.exports = store;
