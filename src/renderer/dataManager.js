@@ -13,6 +13,7 @@ export class DataManager {
     if (!this._data.weeks) this._data.weeks = {};
     if (!this._data.settings) this._data.settings = {};
     if (!this._data.months) this._data.months = {};
+    await this._repairOrphanedWeekEvents(this._data.settings.startOfWeek ?? 0);
   }
 
   get settings() {
@@ -229,6 +230,17 @@ export class DataManager {
     const legacyWeek = this._data.weeks[legacyKey];
     if (!legacyWeek) return primaryKey;
 
+    // 验证 legacyKey 中的数据确实属于当前周，防止错误合并相邻周的合法数据
+    // （legacyKey 字符串与某个自定义周 key 相同时会引发冲突）
+    const legacyDates = [
+      ...Object.keys(legacyWeek.events || {}),
+      ...Object.keys(legacyWeek.notes || {})
+    ];
+    if (legacyDates.length > 0 &&
+        !legacyDates.some(d => getWeekStorageKey(d, startOfWeek) === primaryKey)) {
+      return primaryKey;
+    }
+
     this._data.weeks[primaryKey] = primaryWeek
       ? this._mergeWeekData(primaryWeek, legacyWeek)
       : legacyWeek;
@@ -277,6 +289,119 @@ export class DataManager {
       else delete this._data.weeks[weekKey];
       this._notifySaveFailure('保存失败：本周数据未写入磁盘。请稍后重试。');
       return false;
+    }
+  }
+
+  // 修复历史版本 bug 导致的孤立事件：事件存储在错误 week key 下，迁移到正确位置
+  async _repairOrphanedWeekEvents(startOfWeek = 0) {
+    const keysToSet = new Map();    // weekKey -> weekData（需持久化）
+    const keysToDelete = new Set(); // 已清空的孤立 week
+
+    for (const storedKey of Object.keys(this._data.weeks)) {
+      const weekData = this._data.weeks[storedKey];
+      if (!weekData) continue;
+
+      const orphanedEvents = {}; // { targetKey: { dateStr: slotsObj } }
+      const orphanedNotes  = {}; // { targetKey: { dateStr: notesArr } }
+      const residualEventDates = new Set();
+      const residualNoteDates  = new Set();
+
+      for (const dateStr of Object.keys(weekData.events || {})) {
+        const correctKey = getWeekStorageKey(dateStr, startOfWeek);
+        if (correctKey === storedKey) {
+          residualEventDates.add(dateStr);
+        } else {
+          if (!orphanedEvents[correctKey]) orphanedEvents[correctKey] = {};
+          orphanedEvents[correctKey][dateStr] = weekData.events[dateStr];
+        }
+      }
+
+      for (const dateStr of Object.keys(weekData.notes || {})) {
+        const correctKey = getWeekStorageKey(dateStr, startOfWeek);
+        if (correctKey === storedKey) {
+          residualNoteDates.add(dateStr);
+        } else {
+          if (!orphanedNotes[correctKey]) orphanedNotes[correctKey] = {};
+          orphanedNotes[correctKey][dateStr] = weekData.notes[dateStr];
+        }
+      }
+
+      const hasOrphans = Object.keys(orphanedEvents).length > 0 ||
+                         Object.keys(orphanedNotes).length > 0;
+      if (!hasOrphans) continue;
+
+      // weekNotes 跟随 event 数量最多的目标 week
+      const eventCountByTarget = {};
+      for (const [k, v] of Object.entries(orphanedEvents))
+        eventCountByTarget[k] = Object.keys(v).length;
+      const weekNotesTarget = Object.keys(eventCountByTarget).length > 0
+        ? Object.entries(eventCountByTarget).sort((a, b) => b[1] - a[1])[0][0]
+        : null;
+
+      const sourceWeekNotes = weekData.weekNotes || ['', '', ''];
+      const sourceHasWeekNotes = sourceWeekNotes.some(s => s && s.trim());
+
+      // 合并孤立数据到各目标 week（目标优先：已有 slot 不覆盖）
+      const allTargetKeys = new Set([
+        ...Object.keys(orphanedEvents),
+        ...Object.keys(orphanedNotes)
+      ]);
+
+      for (const targetKey of allTargetKeys) {
+        this._ensureWeek(targetKey);
+        const target = this._data.weeks[targetKey];
+
+        for (const [dateStr, slots] of Object.entries(orphanedEvents[targetKey] || {})) {
+          if (!target.events[dateStr]) target.events[dateStr] = {};
+          for (const [slot, items] of Object.entries(slots)) {
+            if (!target.events[dateStr][slot]) target.events[dateStr][slot] = items;
+          }
+        }
+
+        for (const [dateStr, notesArr] of Object.entries(orphanedNotes[targetKey] || {})) {
+          if (!target.notes[dateStr]) target.notes[dateStr] = notesArr;
+        }
+
+        if (targetKey === weekNotesTarget && sourceHasWeekNotes) {
+          const targetHasWeekNotes = (target.weekNotes || []).some(s => s && s.trim());
+          if (!targetHasWeekNotes) target.weekNotes = sourceWeekNotes;
+        }
+
+        keysToSet.set(targetKey, target);
+      }
+
+      // 清理源 week 中已迁移的 dateStr
+      for (const dateStr of Object.keys(weekData.events || {})) {
+        if (!residualEventDates.has(dateStr)) delete weekData.events[dateStr];
+      }
+      for (const dateStr of Object.keys(weekData.notes || {})) {
+        if (!residualNoteDates.has(dateStr)) delete weekData.notes[dateStr];
+      }
+
+      const sourceEmpty = Object.keys(weekData.events || {}).length === 0 &&
+                          Object.keys(weekData.notes  || {}).length === 0;
+
+      if (sourceEmpty) {
+        keysToDelete.add(storedKey);
+      } else {
+        if (weekNotesTarget) weekData.weekNotes = ['', '', ''];
+        keysToSet.set(storedKey, weekData);
+      }
+    }
+
+    if (keysToSet.size === 0 && keysToDelete.size === 0) return;
+
+    console.log(`[data] repairOrphanedWeekEvents: 更新 ${keysToSet.size} 个 week，删除 ${keysToDelete.size} 个孤立 week`);
+
+    for (const k of keysToDelete) delete this._data.weeks[k];
+
+    try {
+      await Promise.all([
+        ...[...keysToSet.entries()].map(([k, v]) => window.electronAPI.set(`weeks.${k}`, v)),
+        ...[...keysToDelete].map(k => window.electronAPI.delete(`weeks.${k}`))
+      ]);
+    } catch (err) {
+      console.error('[data] repairOrphanedWeekEvents 持久化失败:', err);
     }
   }
 }
