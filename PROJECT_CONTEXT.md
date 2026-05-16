@@ -1,6 +1,6 @@
 # 屏幕日程 (Screen Schedule) — 项目技术文档
 
-> 版本：v1.1.2 | 技术栈：Electron 29 + Vanilla JS (ESM) | 平台：Windows / macOS
+> 版本：v1.1.3 | 技术栈：Electron 29 + Vanilla JS (ESM) | 平台：Windows / macOS
 
 ---
 
@@ -43,13 +43,14 @@ store.js
 | `src/main/windowManager.js` | 创建 BrowserWindow（无边框透明窗）、窗口位置持久化、关闭拦截→隐藏、主题推送 |
 | `src/main/tray.js` | 系统托盘图标、右键菜单（显示/隐藏、置顶、开机自启、检查更新、退出）|
 | `src/main/store.js` | electron-store schema 定义，数据文件名 `schedule-data.json` |
-| `src/main/license.js` | License Key 离线验证逻辑 |
+| `src/main/license.js` | License Key 离线验证逻辑（HMAC-SHA256，20字符编码）|
+| `src/main/trial.js` | 7天试用期逻辑：初始化、HMAC签名防篡改、过期检测 |
 
 ### Renderer
 
 | 文件 | 职责 |
 |------|------|
-| `src/renderer/app.js` | 全局状态（`currentOffset`, `selectedDate`, `currentView`, `monthOffset`）、render() 主循环、事件绑定、激活弹窗、名言编辑弹窗 |
+| `src/renderer/app.js` | 全局状态（`currentOffset`, `selectedDate`, `currentView`, `monthOffset`）、render() 主循环、事件绑定、激活弹窗（含试用期逻辑）、名言编辑弹窗 |
 | `src/renderer/weekGrid.js` | 周/日/月视图网格渲染、`FloatingEditor`（浮动编辑框）、`CurrentTimeLayer`（红线）、拖拽移动事件 |
 | `src/renderer/notesPanel.js` | 左侧"本周重点"(`RightPanel`) + 右侧"本月重点"(`NotesPanel`) 面板渲染 |
 | `src/renderer/dataManager.js` | 渲染侧唯一数据中心：内存缓存 + 异步持久化 + 旧数据格式迁移 |
@@ -83,7 +84,9 @@ store.js
     "launchAtLogin": false,
     "windowBounds": { "x":..., "y":..., "width":..., "height":... },
     "customQuotes": ["..."],
-    "licenseKey": "..."
+    "licenseKey": "...",
+    "trialStartDate": "2026-05-16T10:30:00.000Z",  // 首次运行时由 initTrial() 写入
+    "trialStartHash": "abcd1234efgh5678"            // HMAC-SHA256 前16字符，防篡改
   },
   "weeks": {
     "2026-W20": {                       // Week Storage Key（见下方说明）
@@ -221,6 +224,7 @@ if (!ok) 回滚内存;
 | `store:delete` | key | boolean | 删单 key |
 | `license:validate` | key | boolean | 验证激活码 |
 | `license:getStatus` | — | boolean | 当前是否已激活 |
+| `trial:getStatus` | — | `{isExpired, daysRemaining, activated}` | 试用期状态（已激活时 activated=true 直接返回）|
 
 ### 渲染 → 主（send，无返回值）
 
@@ -235,6 +239,7 @@ if (!ok) 回滚内存;
 | `window:setOpacity` | number | 设置透明度（0.2~1.0）|
 | `window:updateShortcut` | string | 修改全局快捷键 |
 | `show-editor-context-menu` | — | 弹出右键剪切/复制/粘贴/删除菜单 |
+| `tray:rebuild` | — | 通知主进程立即重建托盘菜单（激活成功后调用）|
 
 ### 主 → 渲染（推送）
 
@@ -245,6 +250,7 @@ if (!ok) 回滚内存;
 | `window:maximizeChanged` | boolean | 最大化/还原 |
 | `trigger-event-delete` | — | 右键菜单"删除日程"点击 |
 | `quotes:edit` | — | 托盘菜单"我的名言"点击 |
+| `show:activation` | — | 托盘菜单"激活软件..."点击（试用到期时显示）|
 | `update:progress` | {percent, transferred, total} | 更新下载进度 |
 
 ---
@@ -272,19 +278,22 @@ MAX_VALUE_SIZE = 64 * 1024;  // 每个 IPC store:set 的 value 上限
 
 ```
 app.whenReady()
+  ├─ 读取 privacy-installer-accepted.txt（NSIS 安装时写入）
   ├─ 数据迁移：startOfWeek 重置为 0（一次性）
   ├─ 同步开机自启到系统
+  ├─ initTrial(store)              // 首次运行写入试用期起始日 + HMAC 签名
   ├─ createWindow()
-  ├─ createTray()
+  ├─ createTray()                  // 返回 { tray, rebuildMenu }
+  ├─ 注册 tray:rebuild IPC handler
   ├─ registerShortcut()
   └─ setupAutoUpdater()
 
 Renderer init()
   ├─ DataManager.load()            // 读取全部数据 + 修复孤立事件
-  ├─ showActivationModalIfNeeded() // 激活码弹窗（未激活时）
+  ├─ showActivationModalIfNeeded() // 已激活→跳过；试用期内→跳过；已到期→只读模式
   ├─ WeekGrid.init()               // 初始化浮动编辑框
   ├─ render()                      // 渲染周视图
-  └─ 绑定所有 UI 事件
+  └─ 绑定所有 UI 事件（含 onShowActivation 监听托盘激活触发）
 ```
 
 ---
@@ -311,7 +320,30 @@ Renderer init()
 `weekGrid.js:297` — `setInterval(updateRedLine, 60_000)` 改间隔值
 
 ### 调试数据存储
-数据文件：`%APPDATA%\Schedule\schedule-data.json`
+数据文件：`%APPDATA%\screen-schedule\schedule-data.json`（开发模式）/ `%APPDATA%\Schedule\schedule-data.json`（打包后，productName="Schedule"）
+
+### 模拟试用期到期（测试只读模式）
+1. 退出应用
+2. 编辑数据文件，将 `trialStartDate` 改为 8 天前的时间，`trialStartHash` 改为任意乱码
+3. 重启应用，触发只读模式
+4. 恢复：将 `trialStartDate`/`trialStartHash` 删除，`initTrial` 会重新初始化 7 天试用
+
+### 试用期机制架构
+```
+启动时：
+  已激活(licenseKey有效) → 完整访问
+  试用期内(daysRemaining>0, HMAC匹配) → 完整访问，托盘显示"剩余X天"
+  试用到期 OR 签名不匹配 → window.__readOnly=true（只读模式）
+    ├─ weekGrid.js: FloatingEditor.open() 冒头拦截
+    ├─ notesPanel.js: focus 事件拦截 + input 事件拦截
+    └─ 托盘菜单: "试用已结束" + "激活软件..."（send show:activation → renderer showActivationModal(true)）
+
+激活成功后：
+  window.__readOnly = false
+  ipcRenderer.send('tray:rebuild') → 主进程立即重建托盘菜单
+```
+
+**防篡改**：`trialStartDate` 配套存 `trialStartHash`（HMAC-SHA256 前16位）。日期被手动修改时签名失配，直接判定为过期。时钟回退（now < start）也判定为过期。
 
 ---
 
