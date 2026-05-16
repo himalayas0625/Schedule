@@ -223,6 +223,10 @@ const FloatingEditor = {
   },
 
   open(cell, currentText, currentColorType, onCommit, onDelete) {
+    if (window.__readOnly) {
+      alert('试用期已结束，请通过托盘菜单激活软件以继续编辑。');
+      return;
+    }
     // 切换到新 block 前，先保存当前编辑中的内容（避免丢失）
     this._forceSave();
 

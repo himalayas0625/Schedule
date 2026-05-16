@@ -171,20 +171,27 @@ function updateDayHeaderPill(dateStr, customQuotes = []) {
   pill.querySelector('.dhp-secondary').textContent = quote;
 }
 
-// ── 激活码验证弹窗 ────────────────────────────────────────────────────────────
-async function showActivationModalIfNeeded() {
-  const activated = await window.electronAPI.getLicenseStatus();
-  if (activated) return;
+// ── 激活码弹窗（可复用，dismissible=true 时"退出"变"取消"）────────────────────
+function showActivationModal(dismissible = false) {
+  const modal   = document.getElementById('activation-modal');
+  const input   = document.getElementById('license-key-input');
+  const errMsg  = document.getElementById('license-error');
+
+  // 克隆按钮以清除旧监听器（多次调用时避免重复绑定）
+  const oldBtn     = document.getElementById('license-activate-btn');
+  const oldQuitBtn = document.getElementById('license-quit-btn');
+  const btn     = oldBtn.cloneNode(true);
+  const quitBtn = oldQuitBtn.cloneNode(true);
+  oldBtn.replaceWith(btn);
+  oldQuitBtn.replaceWith(quitBtn);
+
+  quitBtn.textContent = dismissible ? '取消' : '退出程序';
+  input.value = '';
+  errMsg.classList.remove('visible');
+  modal.classList.add('visible');
+  input.focus();
 
   return new Promise((resolve) => {
-    const modal   = document.getElementById('activation-modal');
-    const input   = document.getElementById('license-key-input');
-    const errMsg  = document.getElementById('license-error');
-    const btn     = document.getElementById('license-activate-btn');
-    const quitBtn = document.getElementById('license-quit-btn');
-    modal.classList.add('visible');
-    input.focus();
-
     // 自动格式化：精确过滤字符集，退格时修正光标位置
     input.addEventListener('input', () => {
       const pos = input.selectionStart;
@@ -195,7 +202,6 @@ async function showActivationModalIfNeeded() {
       const formatted = (raw.match(/.{1,5}/g) || []).join('-');
       if (input.value !== formatted) {
         input.value = formatted;
-        // 光标补偿：计算新位置前已有多少连字符
         const dashes = (formatted.slice(0, pos).match(/-/g) || []).length;
         input.setSelectionRange(pos + dashes, pos + dashes);
       }
@@ -208,7 +214,9 @@ async function showActivationModalIfNeeded() {
       btn.disabled = false;
       if (valid) {
         modal.classList.remove('visible');
-        resolve();
+        window.__readOnly = false;
+        window.electronAPI.notifyTrayRebuild();
+        resolve(true);
       } else {
         errMsg.classList.add('visible');
         input.focus();
@@ -220,9 +228,26 @@ async function showActivationModalIfNeeded() {
     });
 
     quitBtn.addEventListener('click', () => {
-      window.electronAPI.quitApp();
+      if (dismissible) {
+        modal.classList.remove('visible');
+        resolve(false);
+      } else {
+        window.electronAPI.quitApp();
+      }
     }, { once: true });
   });
+}
+
+// ── 启动时检查：已激活/试用期内→通过；试用到期→只读模式 ───────────────────────
+async function showActivationModalIfNeeded() {
+  const activated = await window.electronAPI.getLicenseStatus();
+  if (activated) return;
+
+  const trial = await window.electronAPI.getTrialStatus();
+  if (!trial.isExpired) return; // 试用期内，完整访问
+
+  // 试用到期：进入只读模式，不阻塞启动
+  window.__readOnly = true;
 }
 
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
@@ -581,6 +606,11 @@ async function init() {
 
   // 监听托盘菜单触发
   window.electronAPI.onQuotesEdit(openQuotesModal);
+
+  // 托盘"激活软件..."触发激活弹窗（可取消，成功后退出只读模式）
+  window.electronAPI.onShowActivation(() => {
+    showActivationModal(true);
+  });
 }
 
 init().catch(console.error);

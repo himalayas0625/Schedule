@@ -43,5 +43,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // License Key 授权
   validateLicense: (key) => ipcRenderer.invoke('license:validate', key),
-  getLicenseStatus: () => ipcRenderer.invoke('license:getStatus')
+  getLicenseStatus: () => ipcRenderer.invoke('license:getStatus'),
+
+  // 试用期
+  getTrialStatus: () => ipcRenderer.invoke('trial:getStatus'),
+  onShowActivation: (callback) => {
+    ipcRenderer.on('show:activation', () => callback());
+  },
+  notifyTrayRebuild: () => ipcRenderer.send('tray:rebuild')
 });

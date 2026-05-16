@@ -1,5 +1,7 @@
 const { Tray, Menu, app, nativeImage, dialog, shell } = require('electron');
 const path = require('path');
+const { getTrialStatus } = require('./trial');
+const { validateLicenseKey } = require('./license');
 
 let tray = null;
 
@@ -64,6 +66,22 @@ function createTray(win, store, checkForUpdates) {
           win.webContents.send('quotes:edit');
         }
       },
+      { type: 'separator' },
+      ...(() => {
+        const isActivated = validateLicenseKey(store.get('settings.licenseKey') || '');
+        if (isActivated) return [{ label: '✓ 已激活', enabled: false }];
+        const trial = getTrialStatus(store);
+        if (trial.isExpired) {
+          return [
+            { label: '试用已结束', enabled: false },
+            {
+              label: '激活软件...',
+              click: () => { win.show(); win.webContents.send('show:activation'); }
+            }
+          ];
+        }
+        return [{ label: `试用期剩余 ${trial.daysRemaining} 天`, enabled: false }];
+      })(),
       { type: 'separator' },
       {
         label: `版本 ${app.getVersion()}`,
@@ -131,7 +149,7 @@ function createTray(win, store, checkForUpdates) {
   tray.on('right-click', () => buildMenu());
 
   buildMenu();
-  return tray;
+  return { tray, rebuildMenu: buildMenu };
 }
 
 module.exports = { createTray };

@@ -20,7 +20,9 @@ const schema = {
       shortcut: 'Alt+Space',
       launchAtLogin: false,
       privacyAcceptedVersion: '',
-      licenseKey: ''
+      licenseKey: '',
+      trialStartDate: '',
+      trialStartHash: ''
     }
   }
 };

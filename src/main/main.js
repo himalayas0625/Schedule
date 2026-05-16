@@ -6,6 +6,7 @@ const { createTray } = require('./tray');
 const store = require('./store');
 const { autoUpdater } = require('electron-updater');
 const { validateLicenseKey } = require('./license');
+const { initTrial, getTrialStatus } = require('./trial');
 
 // ── IPC 参数校验（显式 allowlist）─────────────────────────────────────────────
 const ALLOWED_STORE_KEYS = [
@@ -20,7 +21,9 @@ const ALLOWED_STORE_KEYS = [
   'settings.windowBounds',
   'settings.customQuotes',
   'settings._migratedWeekStartV1',
-  'settings.privacyAcceptedVersion'
+  'settings.privacyAcceptedVersion',
+  'settings.trialStartDate',
+  'settings.trialStartHash'
 ];
 
 function isValidStoreKey(key) {
@@ -202,6 +205,13 @@ app.on('second-instance', () => {
   if (win) { win.show(); win.focus(); }
 });
 
+// IPC - 试用期状态
+ipcMain.handle('trial:getStatus', () => {
+  const isActivated = validateLicenseKey(store.get('settings.licenseKey') || '');
+  if (isActivated) return { isExpired: false, daysRemaining: Infinity, activated: true };
+  return { ...getTrialStatus(store), activated: false };
+});
+
 // IPC - License Key 验证
 ipcMain.handle('license:validate', (_e, key) => {
   const valid = validateLicenseKey(key);
@@ -325,8 +335,11 @@ app.whenReady().then(() => {
     app.setLoginItemSettings({ openAtLogin: launchAtLogin });
   }
 
+  initTrial(store);
+
   const win = createWindow(store);
-  createTray(win, store, checkForUpdates);
+  const { rebuildMenu: rebuildTrayMenu } = createTray(win, store, checkForUpdates);
+  ipcMain.on('tray:rebuild', () => rebuildTrayMenu());
   registerShortcut(win);
   setupAutoUpdater();
 });

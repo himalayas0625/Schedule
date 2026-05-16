@@ -70,9 +70,18 @@ function renderTo(panelEl, { items, title, sub, isHighlight, placeholders, onCha
     setTimeout(autoResize, 0);
     autoResizeCallbacks.push(autoResize);
 
+    // 只读模式：阻止输入并提示激活
+    input.addEventListener('focus', () => {
+      if (window.__readOnly) {
+        input.blur();
+        alert('试用期已结束，请通过托盘菜单激活软件以继续编辑。');
+      }
+    });
+
     // 防抖保存 + 自动调整高度
     let saveTimer = null;
     input.addEventListener('input', () => {
+      if (window.__readOnly) return;
       autoResize();
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
