@@ -49,7 +49,7 @@ store.js
 
 | 文件 | 职责 |
 |------|------|
-| `src/renderer/app.js` | 全局状态（`currentOffset`, `selectedDate`, `currentView`, `monthOffset`）、render() 主循环、事件绑定、隐私弹窗、激活弹窗、名言编辑弹窗 |
+| `src/renderer/app.js` | 全局状态（`currentOffset`, `selectedDate`, `currentView`, `monthOffset`）、render() 主循环、事件绑定、激活弹窗、名言编辑弹窗 |
 | `src/renderer/weekGrid.js` | 周/日/月视图网格渲染、`FloatingEditor`（浮动编辑框）、`CurrentTimeLayer`（红线）、拖拽移动事件 |
 | `src/renderer/notesPanel.js` | 左侧"本周重点"(`RightPanel`) + 右侧"本月重点"(`NotesPanel`) 面板渲染 |
 | `src/renderer/dataManager.js` | 渲染侧唯一数据中心：内存缓存 + 异步持久化 + 旧数据格式迁移 |
@@ -63,13 +63,13 @@ store.js
 | `styles/base.css` | CSS 变量 (--cell-height, 主题色)、reset |
 | `styles/layout.css` | 整体布局：三栏 flex、toolbar、system-bar |
 | `styles/grid.css` | 网格体：时间轴、单元格、event-block、浮动编辑框、红线、月视图 |
-| `styles/notes.css` | 侧边栏面板样式、弹窗（激活、隐私、名言）|
+| `styles/notes.css` | 侧边栏面板样式、弹窗（激活、名言）|
 
 ---
 
 ## 三、数据存储结构
 
-数据持久化位置：`%APPDATA%\screen-schedule\schedule-data.json`
+数据持久化位置：`%APPDATA%\Schedule\schedule-data.json`（productName="Schedule"，非 package.name）
 
 ```json
 {
@@ -83,8 +83,7 @@ store.js
     "launchAtLogin": false,
     "windowBounds": { "x":..., "y":..., "width":..., "height":... },
     "customQuotes": ["..."],
-    "licenseKey": "...",
-    "privacyAcceptedVersion": "1.1"
+    "licenseKey": "..."
   },
   "weeks": {
     "2026-W20": {                       // Week Storage Key（见下方说明）
@@ -265,9 +264,6 @@ const TIMES = [/*48个时间槽*/];  // '00:00'~'23:30'
 
 // dataManager.js
 MAX_VALUE_SIZE = 64 * 1024;  // 每个 IPC store:set 的 value 上限
-
-// app.js
-PRIVACY_VERSION = '1.1';     // 隐私说明版本，升级时修改此值强制弹窗
 ```
 
 ---
@@ -284,11 +280,10 @@ app.whenReady()
   └─ setupAutoUpdater()
 
 Renderer init()
-  ├─ DataManager.load()         // 读取全部数据 + 修复孤立事件
-  ├─ showPrivacyNoticeIfNeeded() // 隐私弹窗（首次或版本更新）
+  ├─ DataManager.load()            // 读取全部数据 + 修复孤立事件
   ├─ showActivationModalIfNeeded() // 激活码弹窗（未激活时）
-  ├─ WeekGrid.init()            // 初始化浮动编辑框
-  ├─ render()                   // 渲染周视图
+  ├─ WeekGrid.init()               // 初始化浮动编辑框
+  ├─ render()                      // 渲染周视图
   └─ 绑定所有 UI 事件
 ```
 
@@ -315,15 +310,32 @@ Renderer init()
 ### 修改红线更新频率
 `weekGrid.js:297` — `setInterval(updateRedLine, 60_000)` 改间隔值
 
-### 升级隐私说明版本
-`app.js:229` — `PRIVACY_VERSION = '1.1'` 改为新版本号
-
 ### 调试数据存储
-数据文件：`%APPDATA%\screen-schedule\schedule-data.json`
+数据文件：`%APPDATA%\Schedule\schedule-data.json`
 
 ---
 
-## 九、构建与发布
+## 九、NSIS 安装器设计
+
+安装器脚本：`build/installer.nsh`，通过 `package.json → build.nsis.include` 引入。
+
+### 安装时（customInstall）
+- 创建 `%APPDATA%\Schedule\` 目录
+- 写入 `privacy-installer-accepted.txt`（内容为版本号 `1.1`）
+- `main.js` 启动时读取该文件 → 预写入 `settings.privacyAcceptedVersion` → 删除文件
+- **作用**：让用户在安装向导中看到隐私说明，启动后不再重复弹窗
+
+### 卸载时（customUnInstall）
+1. `taskkill /F /IM "Schedule.exe"` — 强制终止后台进程（应用关闭时隐藏到托盘，进程仍在）
+2. `Sleep 500` — 等待文件句柄释放
+3. 询问用户是否删除 `%APPDATA%\Schedule\`（用户数据）
+4. `RMDir /r "$INSTDIR"` — 清除安装目录残留的 Electron 运行时 DLL（NSIS 默认不追踪这些文件）
+
+> **坑**：不先 taskkill，`RMDir /r "$INSTDIR"` 会因 exe 被锁而静默失败，遗留整个安装目录。
+
+---
+
+## 十、构建与发布
 
 ```bash
 npm start          # 开发模式

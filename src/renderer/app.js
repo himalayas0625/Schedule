@@ -226,35 +226,9 @@ async function showActivationModalIfNeeded() {
 }
 
 // ── 应用初始化 ────────────────────────────────────────────────────────────────
-const PRIVACY_VERSION = '1.1';
-
-// 若用户尚未接受当前版本的隐私说明，则显示弹窗并等待用户操作
-function showPrivacyNoticeIfNeeded(acceptedVersion) {
-  if (acceptedVersion === PRIVACY_VERSION) return Promise.resolve();
-
-  return new Promise((resolve) => {
-    const modal = document.getElementById('privacy-modal');
-    modal.classList.add('visible');
-
-    document.getElementById('privacy-accept-btn').addEventListener('click', async () => {
-      modal.classList.remove('visible');
-      await window.electronAPI.set('settings.privacyAcceptedVersion', PRIVACY_VERSION);
-      resolve();
-    }, { once: true });
-
-    document.getElementById('privacy-reject-btn').addEventListener('click', () => {
-      // 用户不同意：完全退出程序
-      window.electronAPI.quitApp();
-    }, { once: true });
-  });
-}
-
 async function init() {
   const dm = new DataManager();
   await dm.load();
-
-  // ── 隐私说明（首次启动或版本更新时弹出）─────────────────
-  await showPrivacyNoticeIfNeeded(dm.settings.privacyAcceptedVersion || '');
 
   // ── 激活码验证（隐私同意后执行）──────────────────────────
   await showActivationModalIfNeeded();
