@@ -1,4 +1,6 @@
 const { app, ipcMain, globalShortcut, Menu, dialog, BrowserWindow } = require('electron');
+const fs = require('fs');
+const path = require('path');
 const { createWindow, getMainWindow } = require('./windowManager');
 const { createTray } = require('./tray');
 const store = require('./store');
@@ -301,6 +303,16 @@ ipcMain.on('window:updateShortcut', (_e, newShortcut) => {
 });
 
 app.whenReady().then(() => {
+  // ── 安装器隐私同意标记：若存在则预写入 store，跳过应用内弹窗 ──────────────
+  const privacyFlagFile = path.join(app.getPath('userData'), 'privacy-installer-accepted.txt');
+  if (fs.existsSync(privacyFlagFile)) {
+    try {
+      const version = fs.readFileSync(privacyFlagFile, 'utf8').trim();
+      if (version) store.set('settings.privacyAcceptedVersion', version);
+    } catch (_) {}
+    try { fs.unlinkSync(privacyFlagFile); } catch (_) {}
+  }
+
   // ── 一次性迁移：将旧版"周一起始"重置为"周日起始" ───────────────────────────
   if (!store.get('settings._migratedWeekStartV1')) {
     store.set('settings.startOfWeek', 0);
