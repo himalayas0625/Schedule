@@ -380,3 +380,17 @@ npm run release    # 打包 + 发布到 GitHub Releases
 - GitHub: `himalayas0625/Schedule` repo
 - 构建产物排除 `.claude/`、`test/`、`scripts/` 等开发文件
 - 额外资源：`logo.png`、`assets/icon.ico` 打入 `resources/`
+
+---
+
+## 十一、近期变更记录
+
+### v1.1.3（当前）
+- 添加 7 天试用期（`src/main/trial.js`），HMAC-SHA256 防篡改，试用到期进入只读模式
+- 精简托盘右键菜单：移除"版本号"和"开源声明"，保留"检查更新..."（`src/main/tray.js`）
+- `激活码.txt` 加入 `.gitignore`
+
+### 下一步方向（未决定）
+- License 售卖闭环（Gumroad/Paddle 对接激活码生成服务）
+- UI/UX 改进（月视图、拖拽体验等）
+- 发布 v1.1.4
