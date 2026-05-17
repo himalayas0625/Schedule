@@ -267,7 +267,7 @@ function registerShortcut(win) {
   const shortcut = store.get('settings.shortcut') || 'Alt+Space';
   globalShortcut.unregisterAll();
   try {
-    globalShortcut.register(shortcut, () => {
+    const ok = globalShortcut.register(shortcut, () => {
       if (win.isVisible()) {
         win.hide();
       } else {
@@ -281,6 +281,11 @@ function registerShortcut(win) {
         }, 100);
       }
     });
+    if (!ok) {
+      console.warn('快捷键注册失败（可能被其他应用占用）:', shortcut);
+    } else {
+      console.log('快捷键注册成功:', shortcut);
+    }
   } catch (e) {
     console.warn('快捷键注册失败:', shortcut, e.message);
   }
