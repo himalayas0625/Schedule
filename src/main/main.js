@@ -65,6 +65,7 @@ function setupAutoUpdater() {
   // 开发环境跳过，避免干扰调试
   if (!app.isPackaged) return;
 
+  autoUpdater.requestHeaders = { Authorization: 'token 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' };
   autoUpdater.autoDownload = true;          // 静默下载，下载完再提示
   autoUpdater.autoInstallOnAppQuit = false; // 由用户决定何时安装
 
