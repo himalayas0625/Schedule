@@ -216,19 +216,6 @@
 .grid-cell:hover { background: var(--bg-cell-hover); }
 .grid-cell.selected-col { background: rgba(var(--accent-rgb), 0.06); }
 
-.grid-cell.has-event {
-  background: var(--bg-event);
-  color: var(--accent);
-  font-weight: 500;
-  border-radius: 12px;
-  width: calc(100% - 6px);
-  margin-left: 3px;
-  margin-right: 3px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-}
-
 .grid-cell.dragging {
   opacity: 0.35;
 }
@@ -237,81 +224,9 @@
   background: rgba(var(--accent-rgb), 0.18);
 }
 
-.grid-cell.has-event.selected-col {
-  background: rgba(var(--accent-rgb), 0.28);
-}
-
-/* ── 暗色主题任务分类 ─────────────────────────────── */
-
-/* 重要任务（!前缀） */
-[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.event-important),
-:root .grid-cell.has-event:not(.multi-event):has(.event-important) {
-  background: var(--event-bg-important);
-  color: var(--event-text-important);
-}
-
-/* 个人生活（@前缀） */
-[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.event-personal),
-:root .grid-cell.has-event:not(.multi-event):has(.event-personal) {
-  background: var(--event-bg-personal);
-  color: var(--event-text-personal);
-}
-
-/* 暗色并列 block 分类 */
-[data-theme="dark"] .grid-cell.multi-event .event-block.event-important,
-:root .grid-cell.multi-event .event-block.event-important {
-  background: var(--event-bg-important);
-  color: var(--event-text-important);
-}
-
-[data-theme="dark"] .grid-cell.multi-event .event-block.event-personal,
-:root .grid-cell.multi-event .event-block.event-personal {
-  background: var(--event-bg-personal);
-  color: var(--event-text-personal);
-}
-
-/* ── 亮色主题覆盖 ─────────────────────────────────── */
-
-/* 事件块：普通日程（浅蓝底 + 靛蓝字 + 左标识线） */
-[data-theme="light"] .grid-cell.has-event {
-  background: var(--bg-event);
-  color: var(--event-text);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  font-weight: 500;
-  padding: 4px 10px;
-  border-left: 3px solid var(--event-border);
-}
-
-/* 重要任务（!前缀）：浅红底 + 深红字 + 红色标识线 */
-[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.event-important) {
-  background: var(--event-bg-important);
-  color: var(--event-text-important);
-  border-left: 3px solid var(--event-text-important);
-}
-
-/* 个人生活（@前缀）：浅紫底 + 紫字 + 紫色标识线 */
-[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.event-personal) {
-  background: var(--event-bg-personal);
-  color: var(--event-text-personal);
-  border-left: 3px solid var(--event-text-personal);
-}
-
-/* 并列模式：cell 透明，各 block 独立展示 */
-[data-theme="light"] .grid-cell.multi-event {
-  border-left: none;
-  padding-left: 0;
-  box-shadow: none;
-  background: var(--bg-primary) !important;
-}
-
-/* 选中列：蓝色浅背景 */
+/* ── 亮色主题：选中列背景 ─────────────────────────── */
 [data-theme="light"] .grid-cell.selected-col {
   background: var(--bg-selected);
-}
-
-[data-theme="light"] .grid-cell.has-event.selected-col {
-  background: rgba(26, 115, 232, 0.18);
 }
 
 /* ── 事件块（#grid-body 的直接 grid 子元素，可跨多行）─────────────── */
@@ -334,74 +249,49 @@
   align-self: stretch;
 }
 
-/* ── 事件块（单格内的独立内容单元）──────────────────── */
+/* ── 事件块主题 / 分类（基础结构见上方 .event-block）────────────────── */
 
-/* 单事件：block 全宽，继承 cell 的颜色/背景 */
-.grid-cell.has-event:not(.multi-event) .event-block {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-/* 双事件：cell 变为透明 flex 容器，每个 block 独立带背景 */
-.grid-cell.multi-event {
-  background: var(--bg-primary) !important;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  padding: 0;
-  gap: 3px;
-}
-
-.grid-cell.multi-event .event-block {
-  flex: 1;
-  min-width: 0;
-  background: var(--bg-event);
-  color: var(--accent);
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 10px;
-  font-weight: 500;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-/* 文本截断交由 span 子元素处理（flex 容器直接设置 text-overflow 无效） */
 .event-block .event-text {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  align-self: center;
 }
 
-[data-theme="light"] .grid-cell.multi-event .event-block {
+/* 暗色：重要任务（!前缀） */
+[data-theme="dark"] .event-block.event-important,
+:root .event-block.event-important {
+  background: var(--event-bg-important);
+  color: var(--event-text-important);
+}
+/* 暗色：个人生活（@前缀） */
+[data-theme="dark"] .event-block.event-personal,
+:root .event-block.event-personal {
+  background: var(--event-bg-personal);
+  color: var(--event-text-personal);
+}
+
+/* 亮色：普通日程（浅蓝底 + 靛蓝字 + 左标识线） */
+[data-theme="light"] .event-block {
   background: var(--bg-event);
   color: var(--event-text);
-  box-shadow: 0 1px 2px rgba(44, 62, 80, 0.10);
   border-left: 3px solid var(--event-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
-
-[data-theme="light"] .grid-cell.multi-event .event-block.event-important {
+[data-theme="light"] .event-block.event-important {
   background: var(--event-bg-important);
   color: var(--event-text-important);
   border-left: 3px solid var(--event-text-important);
 }
-
-[data-theme="light"] .grid-cell.multi-event .event-block.event-personal {
+[data-theme="light"] .event-block.event-personal {
   background: var(--event-bg-personal);
   color: var(--event-text-personal);
   border-left: 3px solid var(--event-text-personal);
 }
 
-.event-block.dragging {
-  opacity: 0.35;
-}
+.event-block.dragging { opacity: 0.35; }
 
 /* ── 当前时间红线 ─────────────────────────────────── */
 .current-time-line {
@@ -532,75 +422,20 @@
   background: var(--grid-line-color);
 }
 
-/* ── 颜色类型（colorType: 0→.bg-blue, 1→.bg-red, 2→.bg-green）────── */
+/* ── 颜色类型（colorType: 0→blue, 1→red, 2→green）── 以 .event-block 为主体 ── */
 
-/* 亮色：单格事件 */
-[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.bg-blue) {
-  background: var(--event-type-blue-bg);
-  color: var(--event-type-blue-text);
-  border-left: none;
-}
-[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.bg-red) {
-  background: var(--event-type-red-bg);
-  color: var(--event-type-red-text);
-  border-left: none;
-}
-[data-theme="light"] .grid-cell.has-event:not(.multi-event):has(.bg-green) {
-  background: var(--event-type-green-bg);
-  color: var(--event-type-green-text);
-  border-left: none;
-}
+/* 亮色 */
+[data-theme="light"] .event-block.bg-blue  { background: var(--event-type-blue-bg);  color: var(--event-type-blue-text);  border-left: none; }
+[data-theme="light"] .event-block.bg-red   { background: var(--event-type-red-bg);   color: var(--event-type-red-text);   border-left: none; }
+[data-theme="light"] .event-block.bg-green { background: var(--event-type-green-bg); color: var(--event-type-green-text); border-left: none; }
 
-/* 亮色：并列 block */
-[data-theme="light"] .grid-cell.multi-event .event-block.bg-blue {
-  background: var(--event-type-blue-bg);
-  color: var(--event-type-blue-text);
-  border-left: none;
-}
-[data-theme="light"] .grid-cell.multi-event .event-block.bg-red {
-  background: var(--event-type-red-bg);
-  color: var(--event-type-red-text);
-  border-left: none;
-}
-[data-theme="light"] .grid-cell.multi-event .event-block.bg-green {
-  background: var(--event-type-green-bg);
-  color: var(--event-type-green-text);
-  border-left: none;
-}
-
-/* 暗色：单格事件 */
-[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.bg-blue),
-:root .grid-cell.has-event:not(.multi-event):has(.bg-blue) {
-  background: #6E8EA1;
-  color: #ffffff;
-}
-[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.bg-red),
-:root .grid-cell.has-event:not(.multi-event):has(.bg-red) {
-  background: #BC7E79;
-  color: #ffffff;
-}
-[data-theme="dark"] .grid-cell.has-event:not(.multi-event):has(.bg-green),
-:root .grid-cell.has-event:not(.multi-event):has(.bg-green) {
-  background: #8A9A73;
-  color: #ffffff;
-}
-
-/* 暗色：并列 block */
-[data-theme="dark"] .grid-cell.multi-event .event-block.bg-blue,
-:root .grid-cell.multi-event .event-block.bg-blue {
-  background: #6E8EA1;
-  color: #ffffff;
-}
-[data-theme="dark"] .grid-cell.multi-event .event-block.bg-red,
-:root .grid-cell.multi-event .event-block.bg-red {
-  background: #BC7E79;
-  color: #ffffff;
-}
-[data-theme="dark"] .grid-cell.multi-event .event-block.bg-green,
-:root .grid-cell.multi-event .event-block.bg-green {
-  background: #8A9A73;
-  color: #ffffff;
-}
+/* 暗色 */
+[data-theme="dark"] .event-block.bg-blue,
+:root .event-block.bg-blue  { background: #6E8EA1; color: #ffffff; }
+[data-theme="dark"] .event-block.bg-red,
+:root .event-block.bg-red   { background: #BC7E79; color: #ffffff; }
+[data-theme="dark"] .event-block.bg-green,
+:root .event-block.bg-green { background: #8A9A73; color: #ffffff; }
 
 /* ── 编辑器颜色选择器 ─────────────────────────────── */
 .editor-color-row {
