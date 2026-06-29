@@ -353,14 +353,14 @@ async function init() {
           }
         });
       },
-      onEventChange(dateStr, timeSlot, text, colorType = 0) {
-        dm.setEvent(dataWeekKey, dateStr, timeSlot, text, colorType);
+      onEventChange(dateStr, timeSlot, text, colorType = 0, duration) {
+        dm.setEvent(dataWeekKey, dateStr, timeSlot, text, colorType, duration);
       },
       onEventClear(dateStr, timeSlot) {
         dm.clearEvent(dataWeekKey, dateStr, timeSlot);
       },
-      onEventAdd(dateStr, timeSlot, text, colorType = 0) {
-        dm.addEvent(dataWeekKey, dateStr, timeSlot, text, colorType);
+      onEventAdd(dateStr, timeSlot, text, colorType = 0, duration) {
+        dm.addEvent(dataWeekKey, dateStr, timeSlot, text, colorType, duration);
       },
       onEventItemChange(dateStr, timeSlot, index, text, colorType = 0) {
         dm.setEventItem(dataWeekKey, dateStr, timeSlot, text, index, colorType);

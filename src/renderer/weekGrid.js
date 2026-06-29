@@ -1,4 +1,6 @@
 import { getTodayStr } from './dateUtils.js';
+import { computeBlockStyle } from './blockLayout.js';
+import { canPlace } from './collision.js';
 
 // 预生成 48 个时间槽字符串
 const TIMES = (() => {
@@ -15,7 +17,7 @@ const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '
 
 let currentRedLineEl = null;
 let redLineTimer = null;
-let _dragState = null;   // { date, timeSlot, index, text }
+let _dragState = null;   // { date, timeSlot, index, blockRef, text, colorType }（Task 7 起含 duration）
 
 // ── 辅助：读取 slot 的 items 数组（兼容旧格式 { text }）────────────────────────
 function getSlotItems(eventsData, dateStr, timeSlot) {
@@ -25,16 +27,30 @@ function getSlotItems(eventsData, dateStr, timeSlot) {
   return [raw]; // 旧格式 { text } 兼容
 }
 
-// ── 辅助：移除 block，重编剩余 block 的 data-index，更新 cell class ──────────
-function _removeBlock(block, cell) {
+// ── 辅助：重排某日某槽所有 block 的 grid 定位（index / 并排宽度 / 跨行）──────────
+function _relayoutSlot(dateStr, timeSlot) {
+  const body = document.getElementById('grid-body');
+  if (!body || !dateStr || !timeSlot) return;
+  const siblings = Array.from(body.querySelectorAll(
+    `.event-block[data-date="${dateStr}"][data-time="${timeSlot}"]`
+  ));
+  const rowIndex = TIMES.indexOf(timeSlot);
+  siblings.forEach((b, i) => {
+    const dur = parseInt(b.dataset.duration) || 1;
+    b.dataset.index = i;
+    const s = computeBlockStyle(rowIndex, dur, i, siblings.length);
+    b.style.gridRow = s.gridRow;
+    b.style.width = s.widthPct === 100 ? '100%' : '50%';
+    b.style.justifySelf = s.justifySelf;
+  });
+}
+
+// ── 辅助：移除 block，重排同槽剩余 block ──────────────────────────────────────
+function _removeBlock(block) {
+  const dateStr = block.dataset.date;
+  const timeSlot = block.dataset.time;
   block.remove();
-  const remaining = cell.querySelectorAll('.event-block');
-  if (remaining.length === 0) {
-    cell.classList.remove('has-event', 'multi-event');
-  } else {
-    cell.classList.remove('multi-event');
-    remaining.forEach((b, i) => { b.dataset.index = i; });
-  }
+  _relayoutSlot(dateStr, timeSlot);
 }
 
 // ── 浮动编辑框（无感自动保存）────────────────────────────────────────────────
@@ -222,7 +238,7 @@ const FloatingEditor = {
     this._doSave();
   },
 
-  open(cell, currentText, currentColorType, onCommit, onDelete) {
+  open(anchorEl, currentText, currentColorType, onCommit, onDelete) {
     if (window.__readOnly) {
       alert('试用期已结束，请通过托盘菜单激活软件以继续编辑。');
       return;
@@ -232,14 +248,14 @@ const FloatingEditor = {
 
     this._onCommit = onCommit;
     this._onDelete = onDelete || null;
-    this._currentCell = cell;
+    this._currentCell = anchorEl;
     this._currentColorType = currentColorType ?? 0;
     this._lastSavedText = currentText.trim();
     this._lastSavedColorType = this._currentColorType;
     this._updateDots();
 
     // 定位：尝试在格子下方，边界检测
-    const rect = cell.getBoundingClientRect();
+    const rect = anchorEl.getBoundingClientRect();
     const editorW = 220;
     const editorH = 100;
     let left = rect.left;
@@ -393,33 +409,35 @@ export const WeekGrid = {
 
         // 读取该 slot 的事件列表
         const items = getSlotItems(eventsData, dateStr, timeSlot);
-        if (items.length > 0) {
-          cell.classList.add('has-event');
-          if (items.length >= 2) cell.classList.add('multi-event');
-          items.forEach((item, idx) => {
-            cell.appendChild(_makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks));
-          });
-        }
+        // block 作为 #grid-body 直接子元素挂载（grid-row span 跨行），见 _makeEventBlock
+        items.forEach((item, idx) => {
+          body.appendChild(_makeEventBlock(item, idx, items.length, rowIndex, colIndex, dateStr, timeSlot, callbacks));
+        });
 
         // 点击空 cell → 新建事件
         cell.addEventListener('click', () => {
-          if (cell.querySelector('.event-block')) return; // 由 block 处理
+          if (getSlotItems(eventsData, dateStr, timeSlot).length > 0) return; // 已有事件，由 block 处理
           FloatingEditor.open(
             cell, '', 0,
             (newText, newColorType) => {
               if (newText) {
-                const existing = cell.querySelector('.event-block');
+                // 防抖可能多次提交：已建过 block 则原地更新，避免重复追加
+                const existing = body.querySelector(
+                  `.event-block[data-date="${dateStr}"][data-time="${timeSlot}"]`
+                );
                 if (existing) {
-                  // 防抖已创建过 block，直接更新避免重复追加
                   existing.querySelector('.event-text').textContent = newText.split('\n')[0];
                   existing.title = newText;
                   existing.dataset.fullText = newText;
+                  existing.dataset.colorType = newColorType;
                   _applyCategoryClass(existing, newText);
                   _applyColorClass(existing, newColorType);
                 } else {
-                  const block = _makeEventBlock({ text: newText, colorType: newColorType }, 0, cell, dateStr, timeSlot, callbacks);
-                  cell.appendChild(block);
-                  cell.classList.add('has-event');
+                  const block = _makeEventBlock(
+                    { text: newText, colorType: newColorType }, 0, 1,
+                    rowIndex, colIndex, dateStr, timeSlot, callbacks
+                  );
+                  body.appendChild(block);
                 }
                 callbacks.onEventChange(dateStr, timeSlot, newText, newColorType);
               }
@@ -430,7 +448,11 @@ export const WeekGrid = {
         // 所有格子都是放置目标
         cell.addEventListener('dragover', (e) => {
           if (!_dragState) return;
-          if (cell.querySelectorAll('.event-block').length >= 2) return; // 最多 2 个
+          const { duration } = _dragState;
+          const ok = canPlace(eventsData[dateStr] ?? {}, timeSlot, duration, {
+            slot: _dragState.timeSlot, idx: _dragState.index
+          });
+          if (!ok) return;
           e.preventDefault();
           e.dataTransfer.dropEffect = 'move';
           cell.classList.add('drag-over');
@@ -442,31 +464,34 @@ export const WeekGrid = {
           e.preventDefault();
           cell.classList.remove('drag-over');
           if (!_dragState) return;
-          const { date: srcDate, timeSlot: srcSlot, index: srcIdx, blockRef, text, colorType = 0 } = _dragState;
+          const {
+            date: srcDate, timeSlot: srcSlot, index: srcIdx,
+            blockRef, text, colorType = 0, duration = 1
+          } = _dragState;
           _dragState = null;
           if (srcDate === dateStr && srcSlot === timeSlot) return;
 
-          const existingBlocks = cell.querySelectorAll('.event-block');
-          if (existingBlocks.length >= 2) return; // 拒绝第三个
+          // 复核：目标位置容纳 duration 长度不冲突
+          if (!canPlace(eventsData[dateStr] ?? {}, timeSlot, duration, { slot: srcSlot, idx: srcIdx })) return;
 
-          // 清除来源格中被拖动的 block（用引用直接定位，避免 index 竞态失效）
-          if (blockRef && blockRef.parentNode) {
-            _removeBlock(blockRef, blockRef.parentNode);
-          }
+          // 清除来源 block（同时重排来源槽剩余 block）
+          if (blockRef) _removeBlock(blockRef);
 
-          // 添加到目标格
-          const newIdx = existingBlocks.length; // 0 或 1
-          const block = _makeEventBlock({ text, colorType }, newIdx, cell, dateStr, timeSlot, callbacks);
-          cell.appendChild(block);
-          cell.classList.add('has-event');
-          if (newIdx === 1) cell.classList.add('multi-event');
+          // 在目标位置新建 block（duration 跟随），并重排目标槽以处理并排
+          const newIdx = getSlotItems(eventsData, dateStr, timeSlot).length;
+          const block = _makeEventBlock(
+            { text, colorType, duration }, newIdx, newIdx + 1,
+            rowIndex, colIndex, dateStr, timeSlot, callbacks
+          );
+          body.appendChild(block);
+          _relayoutSlot(dateStr, timeSlot);
 
-          // 数据持久化
+          // 持久化：先清源、再写目标（按目标现有数量决定 setEvent / addEvent）
           callbacks.onEventItemClear(srcDate, srcSlot, srcIdx);
           if (newIdx === 0) {
-            callbacks.onEventChange(dateStr, timeSlot, text, colorType);
+            callbacks.onEventChange(dateStr, timeSlot, text, colorType, duration);
           } else {
-            callbacks.onEventAdd(dateStr, timeSlot, text, colorType);
+            callbacks.onEventAdd(dateStr, timeSlot, text, colorType, duration);
           }
         });
 
@@ -599,23 +624,33 @@ function _applyCategoryClass(el, text) {
   }
 }
 
-// ── 创建事件 block ─────────────────────────────────────────────────────────────
-function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
+// ── 创建事件 block（#grid-body 的直接 grid 子元素）──────────────────────────────
+function _makeEventBlock(item, idx, total, rowIndex, colIndex, dateStr, timeSlot, callbacks) {
   const text = typeof item === 'string' ? item : (item.text || '');
   const colorType = typeof item === 'object' ? (item.colorType ?? 0) : 0;
+  const duration = typeof item === 'object' ? (item.duration ?? 1) : 1;
 
   const block = document.createElement('div');
   block.className = 'event-block';
   block.title = text;
   block.draggable = true;
+  block.dataset.date = dateStr;
+  block.dataset.time = timeSlot;
   block.dataset.index = idx;
   block.dataset.colorType = colorType;
   block.dataset.fullText = text;
+  block.dataset.duration = duration;
   _applyCategoryClass(block, text);
   _applyColorClass(block, colorType);
 
-  // 用 span 包裹文本，使 text-overflow: ellipsis 在 flex 容器内正确截断
-  // 仅显示第一行，多行内容通过编辑框查看
+  // grid 定位：跨行 + 对齐天列 + 并排瓜分宽度
+  const layout = computeBlockStyle(rowIndex, duration, idx, total);
+  block.style.gridRow = layout.gridRow;
+  block.style.gridColumn = String(colIndex + 2);
+  block.style.width = layout.widthPct === 100 ? '100%' : '50%';
+  block.style.justifySelf = layout.justifySelf;
+
+  // 文本（仅显示第一行，多行通过编辑框查看）
   const textSpan = document.createElement('span');
   textSpan.className = 'event-text';
   textSpan.textContent = text.split('\n')[0];
@@ -625,7 +660,7 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
   block.addEventListener('click', (e) => {
     e.stopPropagation();
     FloatingEditor.open(
-      cell,
+      block,
       block.dataset.fullText,
       parseInt(block.dataset.colorType) || 0,
       (newText, newColorType) => {
@@ -639,14 +674,13 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
           _applyColorClass(block, newColorType);
           callbacks.onEventItemChange(dateStr, timeSlot, currentIdx, newText, newColorType);
         } else {
-          _removeBlock(block, cell);
+          _removeBlock(block);
           callbacks.onEventItemClear(dateStr, timeSlot, currentIdx);
         }
       },
       () => {
-        // 垃圾桶删除
         const currentIdx = parseInt(block.dataset.index);
-        _removeBlock(block, cell);
+        _removeBlock(block);
         callbacks.onEventItemClear(dateStr, timeSlot, currentIdx);
       }
     );
@@ -658,9 +692,10 @@ function _makeEventBlock(item, idx, cell, dateStr, timeSlot, callbacks) {
       date: dateStr,
       timeSlot,
       index: parseInt(block.dataset.index),
-      blockRef: block,                       // 直接持有元素引用，避免 index 竞态失效
+      blockRef: block,
       text: block.dataset.fullText,
-      colorType: parseInt(block.dataset.colorType) || 0
+      colorType: parseInt(block.dataset.colorType) || 0,
+      duration: parseInt(block.dataset.duration) || 1
     };
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', _dragState.text);

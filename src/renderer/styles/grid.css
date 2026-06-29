@@ -314,6 +314,26 @@
   background: rgba(26, 115, 232, 0.18);
 }
 
+/* ── 事件块（#grid-body 的直接 grid 子元素，可跨多行）─────────────── */
+.event-block {
+  position: relative;
+  z-index: 2;                       /* 浮在 .grid-cell 背景之上 */
+  margin: 2px 3px;
+  padding: 2px 8px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: var(--bg-event);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  align-self: stretch;
+}
+
 /* ── 事件块（单格内的独立内容单元）──────────────────── */
 
 /* 单事件：block 全宽，继承 cell 的颜色/背景 */
