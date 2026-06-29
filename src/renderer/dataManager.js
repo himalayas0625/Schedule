@@ -42,45 +42,60 @@ export class DataManager {
   }
 
   // 设置 index 0 处的事件（新建或覆盖首个）
-  async setEvent(weekKey, dateStr, timeSlot, text, colorType = 0) {
+  async setEvent(weekKey, dateStr, timeSlot, text, colorType = 0, duration) {
     const previousWeekData = this._cloneWeekData(this._data.weeks[weekKey]);
     this._ensureWeek(weekKey);
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {};
     }
     const items = this._getItems(weekKey, dateStr, timeSlot);
+    const finalDuration = duration ?? items[0]?.duration ?? 1;
     if (items.length === 0) {
-      this._data.weeks[weekKey].events[dateStr][timeSlot] = [{ text, colorType }];
+      this._data.weeks[weekKey].events[dateStr][timeSlot] = [{ text, colorType, duration: finalDuration }];
     } else {
-      items[0] = { text, colorType };
+      items[0] = { text, colorType, duration: finalDuration };
       this._data.weeks[weekKey].events[dateStr][timeSlot] = items;
     }
     return await this._persistWeek(weekKey, previousWeekData);
   }
 
-  // 更新指定 index 处的事件
-  async setEventItem(weekKey, dateStr, timeSlot, text, index, colorType = 0) {
+  // 更新指定 index 处的事件（不传 duration 时保留原时长）
+  async setEventItem(weekKey, dateStr, timeSlot, text, index, colorType = 0, duration) {
     const previousWeekData = this._cloneWeekData(this._data.weeks[weekKey]);
     this._ensureWeek(weekKey);
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {};
     }
     const items = this._getItems(weekKey, dateStr, timeSlot);
-    items[index] = { text, colorType };
+    const finalDuration = duration ?? items[index]?.duration ?? 1;
+    items[index] = { text, colorType, duration: finalDuration };
     this._data.weeks[weekKey].events[dateStr][timeSlot] = items;
     return await this._persistWeek(weekKey, previousWeekData);
   }
 
-  // 追加一个新事件到当前 slot
-  async addEvent(weekKey, dateStr, timeSlot, text, colorType = 0) {
+  // 追加一个新事件到当前 slot（新事件默认 30 分钟）
+  async addEvent(weekKey, dateStr, timeSlot, text, colorType = 0, duration = 1) {
     const previousWeekData = this._cloneWeekData(this._data.weeks[weekKey]);
     this._ensureWeek(weekKey);
     if (!this._data.weeks[weekKey].events[dateStr]) {
       this._data.weeks[weekKey].events[dateStr] = {};
     }
     const items = this._getItems(weekKey, dateStr, timeSlot);
-    items.push({ text, colorType });
+    items.push({ text, colorType, duration });
     this._data.weeks[weekKey].events[dateStr][timeSlot] = items;
+    return await this._persistWeek(weekKey, previousWeekData);
+  }
+
+  // 仅修改指定事件的时长（半小时数），不改文本 / 颜色 / 起始槽
+  // 调用方（resize 手柄）需先用 canPlace 校验不冲突后再调用
+  async setEventDuration(weekKey, dateStr, timeSlot, index, duration) {
+    const day = this._data.weeks[weekKey]?.events?.[dateStr];
+    if (!day?.[timeSlot]) return true;
+    const items = this._getItems(weekKey, dateStr, timeSlot);
+    if (!items[index]) return true;
+    const previousWeekData = this._cloneWeekData(this._data.weeks[weekKey]);
+    items[index] = { ...items[index], duration };
+    day[timeSlot] = items;
     return await this._persistWeek(weekKey, previousWeekData);
   }
 

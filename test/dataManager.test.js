@@ -82,4 +82,51 @@ describe('DataManager', () => {
     expect(dm.getNotes('2026-W14', '2026-03-30')).toEqual(['', '', '']);
     expect(window.alert).toHaveBeenCalled();
   });
+
+  it('persists duration when creating a new event', async () => {
+    mockElectronAPI.getAll.mockResolvedValue({ weeks: {}, settings: {} });
+    await dm.load();
+
+    await dm.setEvent('2026-W27', '2026-06-29', '09:00', 'Meeting', 0, 2);
+
+    expect(dm.getWeekData('2026-W27').events['2026-06-29']['09:00'][0])
+      .toEqual({ text: 'Meeting', colorType: 0, duration: 2 });
+  });
+
+  it('defaults duration to 1 when adding without specifying', async () => {
+    mockElectronAPI.getAll.mockResolvedValue({ weeks: {}, settings: {} });
+    await dm.load();
+
+    await dm.addEvent('2026-W27', '2026-06-29', '09:00', 'Quick');
+
+    expect(dm.getWeekData('2026-W27').events['2026-06-29']['09:00'][0].duration).toBe(1);
+  });
+
+  it('preserves duration when editing text via setEventItem', async () => {
+    mockElectronAPI.getAll.mockResolvedValue({
+      weeks: { '2026-W27': { events: { '2026-06-29': { '09:00': [{ text: 'Old', colorType: 0, duration: 3 }] } } } },
+      settings: {}
+    });
+    await dm.load();
+
+    await dm.setEventItem('2026-W27', '2026-06-29', '09:00', 'New', 0, 1);
+
+    const item = dm.getWeekData('2026-W27').events['2026-06-29']['09:00'][0];
+    expect(item.text).toBe('New');
+    expect(item.duration).toBe(3);
+  });
+
+  it('setEventDuration changes only the duration field', async () => {
+    mockElectronAPI.getAll.mockResolvedValue({
+      weeks: { '2026-W27': { events: { '2026-06-29': { '09:00': [{ text: 'Meeting', colorType: 1, duration: 1 }] } } } },
+      settings: {}
+    });
+    await dm.load();
+
+    const ok = await dm.setEventDuration('2026-W27', '2026-06-29', '09:00', 0, 4);
+
+    expect(ok).toBe(true);
+    expect(dm.getWeekData('2026-W27').events['2026-06-29']['09:00'][0])
+      .toEqual({ text: 'Meeting', colorType: 1, duration: 4 });
+  });
 });
