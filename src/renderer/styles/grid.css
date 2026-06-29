@@ -293,6 +293,35 @@
 
 .event-block.dragging { opacity: 0.35; }
 
+/* ── resize 手柄（事件块底部）────────────────────────────────────── */
+.event-block .resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: ns-resize;
+}
+.event-block .resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.event-block:hover .resize-handle::after,
+.event-block.resizing .resize-handle::after { opacity: 0.5; }
+.event-block.resizing {
+  z-index: 5;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
 /* ── 当前时间红线 ─────────────────────────────────── */
 .current-time-line {
   position: absolute;

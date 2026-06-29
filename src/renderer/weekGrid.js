@@ -18,6 +18,7 @@ const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '
 let currentRedLineEl = null;
 let redLineTimer = null;
 let _dragState = null;   // { date, timeSlot, index, blockRef, text, colorType }（Task 7 起含 duration）
+let _activeEventsByDate = null;   // 当前渲染中的 eventsData，供 resize 实时碰撞校验
 
 // ── 辅助：读取 slot 的 items 数组（兼容旧格式 { text }）────────────────────────
 function getSlotItems(eventsData, dateStr, timeSlot) {
@@ -375,6 +376,7 @@ export const WeekGrid = {
   _renderBody(weekDates, eventsData, selectedDate, callbacks) {
     const body = document.getElementById('grid-body');
     body.innerHTML = '';
+    _activeEventsByDate = eventsData ?? {};
 
     // 红线（position:absolute，不参与 grid 布局）
     const redLine = document.createElement('div');
@@ -624,6 +626,83 @@ function _applyCategoryClass(el, text) {
   }
 }
 
+// ── resize 手柄：pointer events 改变事件时长（仅向下扩展）──────────────────────
+function _initResize(block, handle, dateStr, timeSlot, callbacks) {
+  let dragging = false;
+  let startDuration = 1;
+  let maxDuration = 1;     // 本次拖动能达到的最大 duration（受碰撞 / 越界约束）
+  let pointerId = null;
+  let startY = 0;
+
+  // 预先算出本次从 startDuration 起向下、不碰撞的最大 duration
+  function computeMaxDuration(baseDuration) {
+    const rowIndex = TIMES.indexOf(timeSlot);
+    const hardMax = 48 - rowIndex;                 // 越界上限
+    for (let d = baseDuration; d <= hardMax; d++) {
+      const ok = canPlace(
+        _eventsForActiveDate(dateStr),
+        timeSlot, d,
+        { slot: timeSlot, idx: parseInt(block.dataset.index) }
+      );
+      if (!ok) return d - 1 < baseDuration ? baseDuration : d - 1;
+    }
+    return hardMax;
+  }
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (window.__readOnly) return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    pointerId = e.pointerId;
+    startY = e.clientY;
+    startDuration = parseInt(block.dataset.duration) || 1;
+    maxDuration = computeMaxDuration(startDuration);
+    handle.setPointerCapture(pointerId);
+    block.classList.add('resizing');
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const deltaRows = Math.round((e.clientY - startY) / CELL_HEIGHT);
+    let next = startDuration + deltaRows;
+    if (next < 1) next = 1;
+    if (next > maxDuration) next = maxDuration;
+    if (next === parseInt(block.dataset.duration)) return;
+    block.dataset.duration = next;
+    const rowIndex = TIMES.indexOf(timeSlot);
+    const layout = computeBlockStyle(rowIndex, next, parseInt(block.dataset.index), _siblingCount(block));
+    block.style.gridRow = layout.gridRow;
+  });
+
+  function endResize() {
+    if (!dragging) return;
+    dragging = false;
+    try { handle.releasePointerCapture(pointerId); } catch { /* 已释放 */ }
+    block.classList.remove('resizing');
+    const finalDuration = parseInt(block.dataset.duration) || 1;
+    if (finalDuration !== startDuration) {
+      callbacks.onEventDurationChange(dateStr, timeSlot, parseInt(block.dataset.index), finalDuration);
+    }
+  }
+  handle.addEventListener('pointerup', endResize);
+  handle.addEventListener('pointercancel', endResize);
+}
+
+// 取活跃渲染中的某日事件数据（供 canPlace 实时校验）
+function _eventsForActiveDate(dateStr) {
+  return _activeEventsByDate?.[dateStr] ?? {};
+}
+
+// 同槽兄弟 block 数量（用于并排 total）
+function _siblingCount(block) {
+  const body = document.getElementById('grid-body');
+  if (!body) return 1;
+  return body.querySelectorAll(
+    `.event-block[data-date="${block.dataset.date}"][data-time="${block.dataset.time}"]`
+  ).length;
+}
+
 // ── 创建事件 block（#grid-body 的直接 grid 子元素）──────────────────────────────
 function _makeEventBlock(item, idx, total, rowIndex, colIndex, dateStr, timeSlot, callbacks) {
   const text = typeof item === 'string' ? item : (item.text || '');
@@ -655,6 +734,12 @@ function _makeEventBlock(item, idx, total, rowIndex, colIndex, dateStr, timeSlot
   textSpan.className = 'event-text';
   textSpan.textContent = text.split('\n')[0];
   block.appendChild(textSpan);
+
+  // resize 手柄（底部，pointer events 拖动改时长）
+  const resizeHandle = document.createElement('div');
+  resizeHandle.className = 'resize-handle';
+  block.appendChild(resizeHandle);
+  _initResize(block, resizeHandle, dateStr, timeSlot, callbacks);
 
   // 点击 block → 编辑该事件
   block.addEventListener('click', (e) => {

@@ -367,6 +367,9 @@ async function init() {
       },
       onEventItemClear(dateStr, timeSlot, index) {
         dm.clearEventItem(dataWeekKey, dateStr, timeSlot, index);
+      },
+      onEventDurationChange(dateStr, timeSlot, index, duration) {
+        dm.setEventDuration(dataWeekKey, dateStr, timeSlot, index, duration);
       }
     });
 
