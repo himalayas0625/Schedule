@@ -1,6 +1,6 @@
 # 屏幕日程 (Screen Schedule) — 项目技术文档
 
-> 版本：v1.1.3 | 技术栈：Electron 29 + Vanilla JS (ESM) | 平台：Windows / macOS
+> 版本：v1.2.1 | 技术栈：Electron 29 + Vanilla JS (ESM) | 平台：Windows / macOS
 
 ---
 
@@ -45,6 +45,7 @@ store.js
 | `src/main/store.js` | electron-store schema 定义，数据文件名 `schedule-data.json` |
 | `src/main/license.js` | License Key 离线验证逻辑（HMAC-SHA256，20字符编码）|
 | `src/main/trial.js` | 7天试用期逻辑：初始化、HMAC签名防篡改、过期检测 |
+| `src/main/secrets.js` | 本地签名密钥（**gitignored 不入库**）；`license.js`/`trial.js` 通过 `require('./secrets')` 注入，模板见 `secrets.example.js` |
 
 ### Renderer
 
@@ -209,6 +210,7 @@ if (!ok) 回滚内存;
 - `autoDownload: true`：静默后台下载
 - 下载完成弹窗询问是否立即安装，选是则强制关闭所有窗口后执行 `quitAndInstall`
 - 手动检查设有 60 秒冷却
+- **仓库已公开**（`himalayas0625/Schedule`）：electron-updater 匿名访问 `releases.atom` 即可，无需 token。历史上私有仓库时曾报 404（atom 源不认 PAT），v1.1.5 的"修复"未真正生效，v1.2.1 转为公开后才解决。
 
 ---
 
@@ -377,15 +379,32 @@ npm run release    # 打包 + 发布到 GitHub Releases
 ```
 
 发布配置（`package.json` build 字段）：
-- GitHub: `himalayas0625/Schedule` repo
+- GitHub: `himalayas0625/Schedule` repo（**公开**）
 - 构建产物排除 `.claude/`、`test/`、`scripts/` 等开发文件
 - 额外资源：`logo.png`、`assets/icon.ico` 打入 `resources/`
+
+**签名密钥注入**（v1.2.1 起，避免公开仓库泄露密钥）：
+- `license.js`/`trial.js` 的 HMAC 密钥从 `require('./secrets')` 读取，真实值在 gitignored 的 `src/main/secrets.js`（不入库），模板见 `src/main/secrets.example.js`。
+- `scripts/gen-secrets.js` 优先用环境变量 `LICENSE_SECRET`/`TRIAL_SECRET` 生成 `secrets.js`；无 env 但文件已存在则保留；都没有则构建失败。
+- npm `pre*` 钩子（`prestart`/`prebuild:win`/`prerelease`/`pretest` 等）在运行/构建/测试前自动调用 gen-secrets，确保 `secrets.js` 就位。
+- 注意：`secrets.js` 会被打进 asar（与"防普通用户转发、非防逆向"的定位一致）。
 
 ---
 
 ## 十一、近期变更记录
 
-### v1.1.3（当前）
+### v1.2.1（当前）
+- 修复自动升级 404：仓库转为公开，electron-updater 匿名访问恢复正常
+- 安全：移除安装包内附带的 GitHub PAT；签名密钥抽离至 gitignored 的 `secrets.js`（`scripts/gen-secrets.js` + npm `pre*` 钩子注入）
+- 清理死代码：移除不再需要的 `update-token` 机制
+
+### v1.2.0
+- 事件时长可拖拽：事件块底部 resize 手柄，拖动改变 `duration`（`weekGrid.js` + `dataManager.setEventDuration`）
+- 事件碰撞判定：新增 `src/renderer/collision.js`（`canPlace`）
+- 事件块布局重构：升为 grid 子元素跨行；新增 `src/renderer/blockLayout.js`
+- 数据结构：事件新增 `duration` 字段（半小时数，缺省 1）
+
+### v1.1.3
 - 添加 7 天试用期（`src/main/trial.js`），HMAC-SHA256 防篡改，试用到期进入只读模式
 - 精简托盘右键菜单：移除"版本号"和"开源声明"，保留"检查更新..."（`src/main/tray.js`）
 - `激活码.txt` 加入 `.gitignore`
@@ -393,4 +412,3 @@ npm run release    # 打包 + 发布到 GitHub Releases
 ### 下一步方向（未决定）
 - License 售卖闭环（Gumroad/Paddle 对接激活码生成服务）
 - UI/UX 改进（月视图、拖拽体验等）
-- 发布 v1.1.4
