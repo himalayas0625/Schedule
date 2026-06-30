@@ -393,6 +393,11 @@ npm run release    # 打包 + 发布到 GitHub Releases
 
 ## 十一、近期变更记录
 
+### 未发布（2026-06-30，工作中）
+- 周视图任务条左右各缩 1.5px：`.event-block` 横向 margin `3px → 4.5px`（`styles/grid.css`，commit `1078dba`）
+- 修复任务条右侧超出列边界：单块不再设 `width:100%`，改由 `justify-self:stretch` 填满列并扣除 margin（`weekGrid.js`）。根因是 `width:100% + margin` 总宽超出列
+- 探索已放弃：曾尝试"色块大幅缩进 + `.side-by-side` 加列间呼吸间隙"方案（margin 8px），判定为方向性错误，spec/plan/feature 分支已全部回退
+
 ### v1.2.1（当前）
 - 修复自动升级 404：仓库转为公开，electron-updater 匿名访问恢复正常
 - 安全：移除安装包内附带的 GitHub PAT；签名密钥抽离至 gitignored 的 `secrets.js`（`scripts/gen-secrets.js` + npm `pre*` 钩子注入）
@@ -412,3 +417,5 @@ npm run release    # 打包 + 发布到 GitHub Releases
 ### 下一步方向（未决定）
 - License 售卖闭环（Gumroad/Paddle 对接激活码生成服务）
 - UI/UX 改进（月视图、拖拽体验等）
+- 周视图列间"呼吸感"：横向"色块缩进加间隙"方案已判定方向性错误并放弃，若再尝试需换思路
+- 已知小瑕疵（未处理）：同槽 2 个并排事件（各占 50% 宽）中间因 margin 累加约重叠 9px（pre-existing）
