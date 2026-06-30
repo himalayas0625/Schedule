@@ -233,7 +233,7 @@
 .event-block {
   position: relative;
   z-index: 2;                       /* 浮在 .grid-cell 背景之上 */
-  margin: 2px 3px;
+  margin: 2px 4.5px;
   padding: 2px 8px;
   box-sizing: border-box;
   border-radius: 10px;

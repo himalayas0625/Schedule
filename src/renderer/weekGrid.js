@@ -41,7 +41,7 @@ function _relayoutSlot(dateStr, timeSlot) {
     b.dataset.index = i;
     const s = computeBlockStyle(rowIndex, dur, i, siblings.length);
     b.style.gridRow = s.gridRow;
-    b.style.width = s.widthPct === 100 ? '100%' : '50%';
+    b.style.width = s.widthPct === 100 ? '' : '50%';
     b.style.justifySelf = s.justifySelf;
   });
 }
@@ -726,7 +726,7 @@ function _makeEventBlock(item, idx, total, rowIndex, colIndex, dateStr, timeSlot
   const layout = computeBlockStyle(rowIndex, duration, idx, total);
   block.style.gridRow = layout.gridRow;
   block.style.gridColumn = String(colIndex + 2);
-  block.style.width = layout.widthPct === 100 ? '100%' : '50%';
+  block.style.width = layout.widthPct === 100 ? '' : '50%';  // 单块不设宽：靠 justify-self:stretch 填满列并扣除 margin，避免 width:100%+margin 右侧溢出
   block.style.justifySelf = layout.justifySelf;
 
   // 文本（仅显示第一行，多行通过编辑框查看）
