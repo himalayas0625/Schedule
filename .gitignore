@@ -7,3 +7,8 @@ out/
 .vscode/
 *.log
 待修复bug.md
+settings.local.json
+*.local.json
+.env
+激活码.txt
+src/main/update-token.js
