@@ -65,7 +65,7 @@ function setupAutoUpdater() {
   // 开发环境跳过，避免干扰调试
   if (!app.isPackaged) return;
 
-  try { autoUpdater.requestHeaders = { Authorization: `token ${require('./update-token')}` }; } catch (_) {}
+  // 仓库已公开（himalayas0625/Schedule），匿名访问 GitHub Releases 即可，无需鉴权 token
   autoUpdater.autoDownload = true;          // 静默下载，下载完再提示
   autoUpdater.autoInstallOnAppQuit = false; // 由用户决定何时安装
 

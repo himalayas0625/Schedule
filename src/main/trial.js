@@ -1,8 +1,7 @@
 const crypto = require('crypto');
 
-// SECRET 拆分降低直接阅读难度（与 license.js 风格一致）
-const _S1 = 'screen', _S2 = 'schedule', _S3 = '2025';
-const _SECRET = `${_S1}-${_S2}-${_S3}-trial-v1`;
+// 签名密钥从 gitignored 的 secrets.js 注入（公开仓库不直接暴露密钥）
+const { TRIAL_SECRET: _SECRET } = require('./secrets');
 const TRIAL_DAYS = 7;
 
 function _sign(s) {

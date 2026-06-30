@@ -1,9 +1,7 @@
 const crypto = require('crypto');
 
-// SECRET 拆分降低直接阅读的难度
-// 注意：asar 包未加密，可被工具提取，此方案定位为"防普通用户转发"而非"防逆向"
-const _S1 = 'screen', _S2 = 'schedule', _S3 = '2025';
-const _SECRET = `${_S1}-${_S2}-${_S3}-license-v1`;
+// 签名密钥从 gitignored 的 secrets.js 注入（公开仓库不直接暴露密钥）
+const { LICENSE_SECRET: _SECRET } = require('./secrets');
 
 // 32 字符集，排除易混淆字符：0(零)/O、1(壹)/I/L
 const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
